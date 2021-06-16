@@ -1,1 +1,3 @@
-# galaxy-pacman
+# Galaxy Pacman
+
+The Pac-man game will be a multiplayer and multiscreen remake with a few new fun mechanics. The players will spawn as a Pac-Man, each one with a different color, except for one of them that will start as a Ghost. The Pac-Man's goal is to collect as many points by eating food along the map while the Ghost’s goal is to catch all the Pac-Mans, but, once a Ghost catches a Pac-Man, the player will also turn into a ghost and start hunting other Pac-Mans, which makes the game fun and challenging for both teams. The game ends once all the foods are eaten by the Pac-Mans or all the Pac-Mans get caught.
