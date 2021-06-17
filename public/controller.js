@@ -18,8 +18,16 @@ const FPS = 30;
 var pacmans = [];
 // array of blocks in the map
 var blocks = [];
+// key that is being pressed -> null when none are pressed
+var key = null;
 
 function startGame() {
+	window.addEventListener('keydown', function(e) {
+		key = e
+	})
+	window.addEventListener('keyup', function() {
+		key = null
+	})
 	setInterval(function () {
 		draw();
 	}, 1000 / FPS
@@ -36,8 +44,10 @@ function draw() {
 	});
 
 	//draw each pacman
-	pacmans.forEach(function (player) {
-		player.draw(ctx);
+	pacmans.forEach(function (pacman) {
+		if(key) pacman.direction = getDirection();
+		pacman.updatePosition()
+		pacman.draw(ctx);
 	});
 }
 
@@ -79,6 +89,19 @@ function createGrid(map) {
 			col++;
 		}
 	});
+}
+
+// get direction based on key pressed
+function getDirection() {
+	if(key.code == "ArrowUp") {
+		return "u";
+	} else if(key.code == "ArrowDown") {
+		return "d";
+	} else if(key.code == "ArrowLeft") {
+		return "l"
+	} else if(key.code == "ArrowRight") {
+		return "r"
+	}
 }
 
 // create grid for desired map

@@ -14,6 +14,8 @@ export const WALL_LINE_WIDTH = BLOCK_SIZE / 12
 export const FOOD_SIZE = BLOCK_SIZE / 10
 // Power-up food pill size calculated based on block size (higher denominator = smaller pill)
 export const POWER_PILL_SIZE = BLOCK_SIZE / 3
+// Player speed -> amount of pixels it moves everytime position updates
+export const PLAYER_SPEED = 5
 
 /** *
  * Map layout for master screen
