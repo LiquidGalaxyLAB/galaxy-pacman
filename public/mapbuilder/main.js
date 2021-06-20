@@ -49,7 +49,7 @@ function print() {
             col++
         }
     })
-    final = final.slice(0, -2)
+    final = final.slice(0, -1)
     final = final.concat(']')
     console.log('map =', final)
 }

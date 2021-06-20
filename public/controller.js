@@ -1,5 +1,5 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, TOP_OFFSET } from "./consts.js"
+import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
@@ -105,6 +105,7 @@ function getDirection() {
 }
 
 // create grid for desired map
-createGrid(MASTER_MAP_LAYOUT);
+// createGrid(MASTER_MAP_LAYOUT);
+createGrid(SLAVE_MAP_LAYOUT);
 // start drawing loop
 startGame();
