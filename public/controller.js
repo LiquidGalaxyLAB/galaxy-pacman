@@ -59,35 +59,24 @@ function clearCanvas() {
 
 // create game grid based on selected map layout
 function createGrid(map) {
-	// col and row value of current grid block
-	var col = 0;
-	var row = 0;
-
-	map.forEach(block => {
-		switch (block) {
-			case 1: // Wall
-				blocks.push(new WallBlock(col * BLOCK_SIZE, row * BLOCK_SIZE));
-				break;
-			case 2: // Food
-				blocks.push(new Food(col * BLOCK_SIZE, row * BLOCK_SIZE));
-				break;
-			case 3: // Pacman
-				pacmans.push(new Pacman(col * BLOCK_SIZE, row * BLOCK_SIZE));
-				block = 0; // Set to 0 (indicates empty block with no food)
-				break;
-			case 4: // PowerPill
-				blocks.push(new PowerPill(col * BLOCK_SIZE, row * BLOCK_SIZE));
-				break;
-		}
-
-		if (col == GRID_WIDTH - 1) {
-			// if row ended go to new row and back to first col
-			row++;
-			col = 0;
-		} else {
-			// else keep going on same row
-			col++;
-		}
+	map.forEach((row, i) => {
+		row.forEach((block, j) => {
+			switch (block) {
+				case 1: // Wall
+					blocks.push(new WallBlock(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					break;
+				case 2: // Food
+					blocks.push(new Food(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					break;
+				case 3: // Pacman
+					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					block = 0; // Set to 0 (indicates empty block with no food)
+					break;
+				case 4: // PowerPill
+					blocks.push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					break;
+			}
+		})
 	});
 }
 
@@ -106,6 +95,6 @@ function getDirection() {
 
 // create grid for desired map
 // createGrid(MASTER_MAP_LAYOUT);
-createGrid(SLAVE_MAP_LAYOUT);
+createGrid(MASTER_MAP_LAYOUT);
 // start drawing loop
 startGame();
