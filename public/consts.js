@@ -14,8 +14,10 @@ export const WALL_LINE_WIDTH = BLOCK_SIZE / 12
 export const FOOD_SIZE = BLOCK_SIZE / 10
 // Power-up food pill size calculated based on block size (higher denominator = smaller pill)
 export const POWER_PILL_SIZE = BLOCK_SIZE / 3
-// Player speed -> amount of pixels it moves everytime position updates
-export const PLAYER_SPEED = 5
+// Player speed divider -> denominator for player speed (higher number = slower player)
+export const PLAYER_SPEED_DIVIDER = 5
+// Game Speed (framerate) -> mostly used for testing, decrease denominator for slow mode game (default is 1000 / 30 for 30 fps)
+export const GAME_SPEED = 1000 / 30
 
 /** *
  * Map layout for master screen
@@ -74,9 +76,9 @@ export const MASTER_MAP_LAYOUT = [
     [1, 1, 1, 0, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1, 1, 1],
     [0, 0, 0, 0, 1, 3, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0],
     [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1],
-    [2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2],
-    [1, 1, 1, 1, 2, 1, 1, 1, 2, 2, 1, 1, 1, 2, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 1, 2, 1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 2, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 2, 2, 2, 2],
+    [1, 1, 1, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 1, 1, 1],
     [0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0],
     [1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1],
     [1, 2, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 2, 2, 1],
@@ -92,6 +94,6 @@ export const MASTER_MAP_LAYOUT = [
     [1, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 1],
     [1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1],
     [1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1],
-    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+    [1, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   ]

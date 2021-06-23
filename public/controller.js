@@ -1,5 +1,5 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET } from "./consts.js"
+import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, GAME_SPEED, TOP_OFFSET } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
@@ -11,8 +11,6 @@ canvas.height = window.innerHeight - TOP_OFFSET
 canvas.width = BLOCK_SIZE * GRID_WIDTH + WALL_LINE_WIDTH
 
 const ctx = canvas.getContext("2d");
-// frames per second desired -> used in setInterval (1000/FPS)
-const FPS = 30;
 
 // array of pacmans in the map
 var pacmans = [];
@@ -20,17 +18,20 @@ var pacmans = [];
 var blocks = [];
 // key that is being pressed -> null when none are pressed
 var key = null;
+// 
+const currentMap = MASTER_MAP_LAYOUT
 
 function startGame() {
 	window.addEventListener('keydown', function(e) {
 		key = e
 	})
+
 	window.addEventListener('keyup', function() {
 		key = null
 	})
 	setInterval(function () {
 		draw();
-	}, 1000 / FPS
+	}, GAME_SPEED
 	);
 }
 
@@ -45,8 +46,7 @@ function draw() {
 
 	//draw each pacman
 	pacmans.forEach(function (pacman) {
-		if(key) pacman.direction = getDirection();
-		pacman.updatePosition()
+		pacman.updatePosition(key, currentMap)
 		pacman.draw(ctx);
 	});
 }
@@ -80,21 +80,7 @@ function createGrid(map) {
 	});
 }
 
-// get direction based on key pressed
-function getDirection() {
-	if(key.code == "ArrowUp") {
-		return "u";
-	} else if(key.code == "ArrowDown") {
-		return "d";
-	} else if(key.code == "ArrowLeft") {
-		return "l"
-	} else if(key.code == "ArrowRight") {
-		return "r"
-	}
-}
-
 // create grid for desired map
-// createGrid(MASTER_MAP_LAYOUT);
-createGrid(MASTER_MAP_LAYOUT);
+createGrid(currentMap);
 // start drawing loop
 startGame();
