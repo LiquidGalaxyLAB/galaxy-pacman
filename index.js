@@ -8,6 +8,7 @@ const port = 8128;
 const filePath = "/public" // do not add '/' at the end
 const gameFile = "index.html"
 const mapBuilderFile = "mapbuilder/index.html"
+const controllerFile = "controller/index.html"
 
 
 app.use(express.static(__dirname + filePath))
@@ -16,6 +17,8 @@ app.get('/:id', (req, res) => {
     const id = req.params.id
     if(id == 'mapbuilder') {
         res.sendFile(__dirname + `${filePath}/${mapBuilderFile}`);
+    } else if(id == "controller") {
+        res.sendFile(__dirname + `${filePath}/${controllerFile}`);
     } else {
         res.sendFile(__dirname + `${filePath}/${gameFile}`);
     }
