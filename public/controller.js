@@ -5,36 +5,57 @@ import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
 import PowerPill from "./models/PowerPill.js";
 
-// get canvas element from index.html
+// Socket listeners and functions
+var socket = io()
+
+// Direction from controller
+let currentDirection = "s" // 's' for stop
+
+/**
+ * Update direction method -> responsible for current direction to new direction
+ * @param {String} dir indicates the new direction
+ */
+function updateDirection(dir) {
+	switch(dir) {
+		case "up":
+			currentDirection = "u"
+			break;
+		case "down":
+			currentDirection = "d"
+			break;
+		case "right":
+			currentDirection = "r"
+			break;
+		case "left":
+			currentDirection = "l"
+			break;
+	}
+}
+socket.on('updateDirection', updateDirection)
+
+// Get canvas element from index.html
 const canvas = document.getElementById('gameCanvas');
 canvas.height = window.innerHeight - TOP_OFFSET
 canvas.width = BLOCK_SIZE * GRID_WIDTH + WALL_LINE_WIDTH
 
 const ctx = canvas.getContext("2d");
 
-// array of pacmans in the map
+// Array of pacmans in the map
 var pacmans = [];
-// array of blocks in the map
+// Array of blocks in the map
 var blocks = [];
-// key that is being pressed -> null when none are pressed
-var key = null;
-// 
+// Current map layout
 const currentMap = MASTER_MAP_LAYOUT
 
+// Start game function -> 
 function startGame() {
-	window.addEventListener('keydown', function(e) {
-		key = e
-	})
-
-	window.addEventListener('keyup', function() {
-		key = null
-	})
 	setInterval(function () {
 		draw();
 	}, GAME_SPEED
 	);
 }
 
+// Draw function -> draw objects on canvas
 function draw() {
 	//clear before redrawing
 	clearCanvas()
@@ -46,18 +67,21 @@ function draw() {
 
 	//draw each pacman
 	pacmans.forEach(function (pacman) {
-		pacman.updatePosition(key, currentMap)
+		pacman.updatePosition(currentDirection, currentMap)
 		pacman.draw(ctx);
 	});
 }
 
-// clear canvas -> fill canvas with black rectangle
+// Clear canvas -> fill canvas with black rectangle
 function clearCanvas() {
 	ctx.fillStyle = "black";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-// create game grid based on selected map layout
+/**
+ * Create game grid based on selected map layout
+ * @param {Array} map two dimensional array with map layout
+ */
 function createGrid(map) {
 	map.forEach((row, i) => {
 		row.forEach((block, j) => {
@@ -80,7 +104,7 @@ function createGrid(map) {
 	});
 }
 
-// create grid for desired map
+// Create grid for desired map
 createGrid(currentMap);
-// start drawing loop
+// Start drawing loop
 startGame();

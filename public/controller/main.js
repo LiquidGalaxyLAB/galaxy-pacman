@@ -1,3 +1,6 @@
+var socket = io()
+
+// Controller setup
 const controllerOptions = {
     mode: "dynamic",
     color: "green",
@@ -6,6 +9,18 @@ const controllerOptions = {
 
 var manager = nipplejs.create(controllerOptions)
 
+// Controller direction angle
+let controllerDir = "s";
+// player direction angle
+let playerDir = "s";
+// Controller movement listener
 manager.on('move', function(ev, nipple) {
-    if(nipple.direction) console.log('direction', nipple.direction.angle)
+    // Save controller direction
+    if(nipple.direction) controllerDir = nipple.direction.angle
+    
+    // If player direction is not same as controller emit for socket to update player direction
+    if(playerDir !== controllerDir) {
+        playerDir = controllerDir
+        socket.emit('updateDirection', controllerDir)
+    }
 })

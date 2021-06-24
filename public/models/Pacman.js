@@ -15,7 +15,7 @@ class Pacman {
         this.width = BLOCK_SIZE;
         this.direction = "s";
         this.speed = BLOCK_SIZE / PLAYER_SPEED_DIVIDER;
-        // move interval is responsible for deciding whether player can or cant change direction (if move interval == player speed divider)
+        // Move interval is responsible for deciding whether player can or cant change direction (if move interval == player speed divider)
         this.moveInterval = 0
     }
 
@@ -30,8 +30,10 @@ class Pacman {
 
     /**
      * Update position method -> update player position based on current direction and player speed
+     * @param {String} newDir new direction from player input
+     * @param {Array} map two dimensional array with map layout
      */
-    updatePosition(keyPressed, map) {
+    updatePosition(newDir, map) {
         switch (this.direction) {
             case "u": // up
                 this.y -= this.speed
@@ -51,28 +53,28 @@ class Pacman {
                 break;
         }
 
-        // if player is able to change direction or player is stopped
+        // If player is able to change direction or player is stopped
         if (this.moveInterval == PLAYER_SPEED_DIVIDER || this.direction == "s") {
             this.moveInterval = 0 // reset move interval
 
-            //get player row and col
+            // Get player row and col
             const row = Math.round(this.y / BLOCK_SIZE)
             const col = Math.round(this.x / BLOCK_SIZE)
 
-            // get blocks adjacent to player
+            // Get blocks adjacent to player
             const above = map[row - 1][col]
             const below = map[row + 1][col]
             const right = map[row][col + 1]
             const left = map[row][col - 1]
 
-            // only allow direction change if next block is not wall(id 1)
-            if (keyPressed?.code == "ArrowUp" && above !== 1) {
+            // Only allow direction change if next block is not wall(id 1)
+            if (newDir == "u" && above !== 1) {
                 this.direction = "u";
-            } else if (keyPressed?.code == "ArrowDown" && below !== 1) {
+            } else if (newDir == "d" && below !== 1) {
                 this.direction = "d";
-            } else if (keyPressed?.code == "ArrowLeft" && left !== 1) {
+            } else if (newDir == "l" && left !== 1) {
                 this.direction = "l"
-            } else if (keyPressed?.code == "ArrowRight" && right !== 1) {
+            } else if (newDir == "r" && right !== 1) {
                 this.direction = "r"
             } else if (
                 (this.direction == "u" && above == 1) ||
@@ -80,7 +82,7 @@ class Pacman {
                 (this.direction == "l" && left == 1) ||
                 (this.direction == "r" && right == 1)
             ) {
-                // if next block is wall (id 1) stop player movement -> set direction to s
+                // If next block is wall (id 1) stop player movement -> set direction to s
                 this.direction = "s" // stop
             }
         }
