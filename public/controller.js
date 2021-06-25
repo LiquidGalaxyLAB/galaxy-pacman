@@ -1,9 +1,16 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, GAME_SPEED, TOP_OFFSET } from "./consts.js"
+import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, GAME_SPEED, TOP_OFFSET, SHOW_STATUS } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
 import PowerPill from "./models/PowerPill.js";
+import Stats from "./js/stats.module.js";
+
+// Show status setup
+let container = document.createElement( 'div' );
+document.body.appendChild( container );
+let stats = new Stats();
+if(SHOW_STATUS) container.appendChild( stats.dom );
 
 // Socket listeners and functions
 var socket = io()
@@ -51,6 +58,7 @@ const currentMap = MASTER_MAP_LAYOUT
 function startGame() {
 	setInterval(function () {
 		draw();
+		if(SHOW_STATUS) stats.update();
 	}, GAME_SPEED
 	);
 }
