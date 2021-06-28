@@ -1,4 +1,4 @@
-import { BLOCK_SIZE, PLAYER_SPEED_DIVIDER } from "../consts.js"
+import { BLOCK_SIZE, PLAYER_SPEED_DIVIDER, DIRECTIONS, ENTITIES } from "../consts.js"
 
 /**
  * Pacman object
@@ -13,7 +13,7 @@ class Pacman {
         this.y = y
         this.height = BLOCK_SIZE;
         this.width = BLOCK_SIZE;
-        this.direction = "s";
+        this.direction = DIRECTIONS.STOP; // start stopped
         this.speed = BLOCK_SIZE / PLAYER_SPEED_DIVIDER;
         // Move interval is responsible for deciding whether player can or cant change direction (if move interval == player speed divider)
         this.moveInterval = 0
@@ -35,26 +35,26 @@ class Pacman {
      */
     updatePosition(newDir, map) {
         switch (this.direction) {
-            case "u": // up
+            case DIRECTIONS.UP: // up
                 this.y -= this.speed
                 this.moveInterval++
                 break;
-            case "d": // down
+            case DIRECTIONS.DOWN: // down
                 this.y += this.speed
                 this.moveInterval++
                 break;
-            case "l": // left
+            case DIRECTIONS.LEFT: // left
                 this.x -= this.speed
                 this.moveInterval++
                 break;
-            case "r": // right
+            case DIRECTIONS.RIGHT: // right
                 this.x += this.speed
                 this.moveInterval++
                 break;
         }
 
         // If player is able to change direction or player is stopped
-        if (this.moveInterval == PLAYER_SPEED_DIVIDER || this.direction == "s") {
+        if (this.moveInterval == PLAYER_SPEED_DIVIDER || this.direction == DIRECTIONS.STOP) {
             this.moveInterval = 0 // reset move interval
 
             // Get player row and col
@@ -67,23 +67,23 @@ class Pacman {
             const right = map[row][col + 1]
             const left = map[row][col - 1]
 
-            // Only allow direction change if next block is not wall(id 1)
-            if (newDir == "u" && above !== 1) {
-                this.direction = "u";
-            } else if (newDir == "d" && below !== 1) {
-                this.direction = "d";
-            } else if (newDir == "l" && left !== 1) {
-                this.direction = "l"
-            } else if (newDir == "r" && right !== 1) {
-                this.direction = "r"
+            // Only allow direction change if next block is not wall
+            if (newDir == DIRECTIONS.UP && above !== ENTITIES.WALL) {
+                this.direction = DIRECTIONS.UP;
+            } else if (newDir == DIRECTIONS.DOWN && below !== ENTITIES.WALL) {
+                this.direction = DIRECTIONS.DOWN;
+            } else if (newDir == DIRECTIONS.LEFT && left !== ENTITIES.WALL) {
+                this.direction = DIRECTIONS.LEFT
+            } else if (newDir == DIRECTIONS.RIGHT && right !== ENTITIES.WALL) {
+                this.direction = DIRECTIONS.RIGHT
             } else if (
-                (this.direction == "u" && above == 1) ||
-                (this.direction == "d" && below == 1) ||
-                (this.direction == "l" && left == 1) ||
-                (this.direction == "r" && right == 1)
+                (this.direction == DIRECTIONS.UP && above == ENTITIES.WALL) ||
+                (this.direction == DIRECTIONS.DOWN && below == ENTITIES.WALL) ||
+                (this.direction == DIRECTIONS.LEFT && left == ENTITIES.WALL) ||
+                (this.direction == DIRECTIONS.RIGHT && right == ENTITIES.WALL)
             ) {
-                // If next block is wall (id 1) stop player movement -> set direction to s
-                this.direction = "s" // stop
+                // If next block is wall stop player movement
+                this.direction = DIRECTIONS.STOP // stop
             }
         }
     }

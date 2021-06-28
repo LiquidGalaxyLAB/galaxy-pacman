@@ -1,5 +1,5 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, GAME_SPEED, TOP_OFFSET, SHOW_STATUS } from "./consts.js"
+import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, GAME_SPEED, TOP_OFFSET, SHOW_STATUS, DIRECTIONS } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
@@ -7,36 +7,23 @@ import PowerPill from "./models/PowerPill.js";
 import Stats from "./js/stats.module.js";
 
 // Show status setup
-let container = document.createElement( 'div' );
-document.body.appendChild( container );
+let container = document.createElement('div');
+document.body.appendChild(container);
 let stats = new Stats();
-if(SHOW_STATUS) container.appendChild( stats.dom );
+if (SHOW_STATUS) container.appendChild(stats.dom);
 
 // Socket listeners and functions
 var socket = io()
 
 // Direction from controller
-let currentDirection = "s" // 's' for stop
+let currentDirection = DIRECTIONS.STOP // init standing still
 
 /**
- * Update direction method -> responsible for current direction to new direction
+ * Update direction method -> responsible for changing current direction to new direction
  * @param {String} dir indicates the new direction
  */
 function updateDirection(dir) {
-	switch(dir) {
-		case "up":
-			currentDirection = "u"
-			break;
-		case "down":
-			currentDirection = "d"
-			break;
-		case "right":
-			currentDirection = "r"
-			break;
-		case "left":
-			currentDirection = "l"
-			break;
-	}
+	currentDirection = dir
 }
 socket.on('updateDirection', updateDirection)
 
@@ -58,7 +45,7 @@ const currentMap = MASTER_MAP_LAYOUT
 function startGame() {
 	setInterval(function () {
 		draw();
-		if(SHOW_STATUS) stats.update();
+		if (SHOW_STATUS) stats.update();
 	}, GAME_SPEED
 	);
 }
