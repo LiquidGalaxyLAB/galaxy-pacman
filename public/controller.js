@@ -1,5 +1,5 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, GAME_SPEED, TOP_OFFSET, SHOW_STATUS, DIRECTIONS } from "./consts.js"
+import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET, SHOW_STATUS, DIRECTIONS } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
@@ -41,15 +41,6 @@ var blocks = [];
 // Current map layout
 const currentMap = MASTER_MAP_LAYOUT
 
-// Start game function -> 
-function startGame() {
-	setInterval(function () {
-		draw();
-		if (SHOW_STATUS) stats.update();
-	}, GAME_SPEED
-	);
-}
-
 // Draw function -> draw objects on canvas
 function draw() {
 	//clear before redrawing
@@ -65,6 +56,10 @@ function draw() {
 		pacman.updatePosition(currentDirection, currentMap)
 		pacman.draw(ctx);
 	});
+
+	if (SHOW_STATUS) stats.update();
+
+	requestAnimationFrame(draw)
 }
 
 // Clear canvas -> fill canvas with black rectangle
@@ -102,4 +97,4 @@ function createGrid(map) {
 // Create grid for desired map
 createGrid(currentMap);
 // Start drawing loop
-startGame();
+draw();

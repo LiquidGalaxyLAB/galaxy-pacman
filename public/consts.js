@@ -16,8 +16,6 @@ export const FOOD_SIZE = BLOCK_SIZE / 10
 export const POWER_PILL_SIZE = BLOCK_SIZE / 3
 // Player speed divider -> denominator for player speed (higher number = slower player)
 export const PLAYER_SPEED_DIVIDER = 10
-// Game Speed (framerate) -> mostly used for testing, decrease denominator for slow mode game (default is 1000 / 30 for 30 fps)
-export const GAME_SPEED = 1000 / 60
 // Should show game status? -> true if you want to show status
 export const SHOW_STATUS = true
 
