@@ -1,9 +1,10 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET, SHOW_STATUS, DIRECTIONS } from "./consts.js"
+import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET, SHOW_STATUS, DIRECTIONS, ENTITIES } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
 import PowerPill from "./models/PowerPill.js";
+import Ghost from "./models/Ghost.js";
 import Stats from "./js/stats.module.js";
 
 // Show status setup
@@ -38,6 +39,8 @@ const ctx = canvas.getContext("2d");
 var pacmans = [];
 // Array of blocks in the map
 var blocks = [];
+// Array of blocks in the map
+var ghosts = [];
 // Current map layout
 const currentMap = MASTER_MAP_LAYOUT
 
@@ -56,6 +59,11 @@ function draw() {
 		pacman.updatePosition(currentDirection, currentMap)
 		pacman.draw(ctx);
 	});
+
+	//draw ghosts
+	ghosts.forEach(function (ghost) {
+		ghost.draw(ctx)
+	})
 
 	if (SHOW_STATUS) stats.update();
 
@@ -76,18 +84,21 @@ function createGrid(map) {
 	map.forEach((row, i) => {
 		row.forEach((block, j) => {
 			switch (block) {
-				case 1: // Wall
+				case ENTITIES.WALL: // Wall
 					blocks.push(new WallBlock(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
-				case 2: // Food
+				case ENTITIES.FOOD: // Food
 					blocks.push(new Food(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
-				case 3: // Pacman
+				case ENTITIES.PACMAN: // Pacman
 					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					block = 0; // Set to 0 (indicates empty block with no food)
 					break;
-				case 4: // PowerPill
+				case ENTITIES.POWERPILL: // PowerPill
 					blocks.push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					break;
+				case ENTITIES.GHOST: // Ghost
+					ghosts.push(new Ghost(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 			}
 		})
