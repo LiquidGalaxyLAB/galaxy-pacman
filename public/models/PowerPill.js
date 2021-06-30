@@ -21,6 +21,7 @@ class PowerPill {
     draw(ctx) {
         if(!this.wasEaten) {
             //if power pill hasn't been eaten draw on canvas
+            ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
             const dotX = (this.x) + (this.width / 2) - POWER_PILL_SIZE / 2;
             const dotY = (this.y) + (this.height / 2) - POWER_PILL_SIZE / 2;
             ctx.fillStyle = "white";

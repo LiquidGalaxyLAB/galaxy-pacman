@@ -46,7 +46,8 @@ const currentMap = MASTER_MAP_LAYOUT
 
 // Draw function -> draw objects on canvas
 function draw() {
-	//clear before redrawing
+	//clear before redrawing (important to reset transform before drawing)
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	clearCanvas()
 
 	//draw each block

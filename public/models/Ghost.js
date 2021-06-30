@@ -20,6 +20,7 @@ class Ghost {
      * @param {Object} ctx canvas context object
      */
     draw(ctx) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
         ctx.fillStyle = this.color;
 
         let radius = this.size / 2

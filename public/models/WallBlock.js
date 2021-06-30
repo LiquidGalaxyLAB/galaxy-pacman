@@ -18,6 +18,7 @@ class WallBlock {
      * @param {Object} ctx canvas context object
      */
     draw(ctx) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
 		ctx.strokeStyle= WALL_COLOR;
 		ctx.lineWidth = WALL_LINE_WIDTH;
 		ctx.beginPath();

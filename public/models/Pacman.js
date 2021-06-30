@@ -11,12 +11,17 @@ class Pacman {
         this.startY = y;
         this.x = x;
         this.y = y
-        this.height = BLOCK_SIZE;
-        this.width = BLOCK_SIZE;
+        this.size = BLOCK_SIZE;
         this.direction = DIRECTIONS.STOP; // start stopped
         this.speed = BLOCK_SIZE / PLAYER_SPEED_DIVIDER;
+        this.color = "#FFFF00"
         // Move interval is responsible for deciding whether player can or cant change direction (if move interval == player speed divider)
         this.moveInterval = 0
+        // variables used for pacman mouth animation
+        this.mouthOpenValue = 40
+        this.mouthPosition = -1
+        // pacman currently facing direction
+        this.facing = DIRECTIONS.RIGHT
     }
 
     /**
@@ -24,8 +29,43 @@ class Pacman {
      * @param {Object} ctx canvas context object
      */
     draw(ctx) {
-        ctx.fillStyle = "#FFFF00";
-        ctx.fillRect(this.x, this.y, this.height, this.width);
+        if (this.mouthOpenValue <= 0)
+            this.mouthPosition = 1; // positive for mouth opening
+        else if (this.mouthOpenValue >= 40)
+            this.mouthPosition = -1; // negative for mouth closing
+
+        this.mouthOpenValue += (5 * this.mouthPosition); // subtract when closing add when opening
+
+        // radius is size / 2 so that diameter is equal to block size
+        let radius = this.size / 2
+        ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
+        
+        // set canvas to pacman center and rotate based on currently faced direction
+        ctx.translate(this.x + radius, this.y + radius)
+        switch(this.currentlyFacing) {
+            case DIRECTIONS.RIGHT:
+                ctx.rotate(0 * Math.PI / 180);
+                break;
+            case DIRECTIONS.DOWN:  
+                ctx.rotate(90 * Math.PI / 180);
+                break;
+            case DIRECTIONS.LEFT:
+                ctx.rotate(180 * Math.PI / 180);
+                break;
+            case DIRECTIONS.UP:
+                ctx.rotate(270 * Math.PI / 180);
+                break;
+        }
+        
+        // set canvas back to correct coordinates before drawing
+        ctx.translate(-this.x - radius, -this.y - radius)
+
+        ctx.beginPath();
+        ctx.arc(this.x + radius, this.y + radius, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
+
+        ctx.lineTo(this.x + radius, this.y + radius);
+        ctx.fillStyle = this.color;
+        ctx.fill();
     }
 
     /**
@@ -70,12 +110,16 @@ class Pacman {
             // Only allow direction change if next block is not wall
             if (newDir == DIRECTIONS.UP && above !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.UP;
+                this.currentlyFacing = DIRECTIONS.UP
             } else if (newDir == DIRECTIONS.DOWN && below !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.DOWN;
+                this.currentlyFacing = DIRECTIONS.DOWN
             } else if (newDir == DIRECTIONS.LEFT && left !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.LEFT
+                this.currentlyFacing = DIRECTIONS.LEFT
             } else if (newDir == DIRECTIONS.RIGHT && right !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.RIGHT
+                this.currentlyFacing = DIRECTIONS.RIGHT
             } else if (
                 (this.direction == DIRECTIONS.UP && above == ENTITIES.WALL) ||
                 (this.direction == DIRECTIONS.DOWN && below == ENTITIES.WALL) ||
