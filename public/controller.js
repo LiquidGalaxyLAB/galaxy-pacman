@@ -63,6 +63,7 @@ function draw() {
 
 	//draw ghosts
 	ghosts.forEach(function (ghost) {
+		ghost.updatePosition(currentDirection, currentMap)
 		ghost.draw(ctx)
 	})
 

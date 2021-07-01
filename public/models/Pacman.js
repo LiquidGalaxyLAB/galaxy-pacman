@@ -42,7 +42,7 @@ class Pacman {
         
         // set canvas to pacman center and rotate based on currently faced direction
         ctx.translate(this.x + radius, this.y + radius)
-        switch(this.currentlyFacing) {
+        switch(this.facing) {
             case DIRECTIONS.RIGHT:
                 ctx.rotate(0 * Math.PI / 180);
                 break;
@@ -110,16 +110,16 @@ class Pacman {
             // Only allow direction change if next block is not wall
             if (newDir == DIRECTIONS.UP && above !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.UP;
-                this.currentlyFacing = DIRECTIONS.UP
+                this.facing = DIRECTIONS.UP
             } else if (newDir == DIRECTIONS.DOWN && below !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.DOWN;
-                this.currentlyFacing = DIRECTIONS.DOWN
+                this.facing = DIRECTIONS.DOWN
             } else if (newDir == DIRECTIONS.LEFT && left !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.LEFT
-                this.currentlyFacing = DIRECTIONS.LEFT
+                this.facing = DIRECTIONS.LEFT
             } else if (newDir == DIRECTIONS.RIGHT && right !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.RIGHT
-                this.currentlyFacing = DIRECTIONS.RIGHT
+                this.facing = DIRECTIONS.RIGHT
             } else if (
                 (this.direction == DIRECTIONS.UP && above == ENTITIES.WALL) ||
                 (this.direction == DIRECTIONS.DOWN && below == ENTITIES.WALL) ||
