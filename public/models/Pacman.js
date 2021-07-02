@@ -88,7 +88,6 @@ class Pacman {
      */
     updatePosition(newDir, map, screen, nScreens, player, socket) {
         this.y = player.y
-        this.x = player.x
         let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
         let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
         let relativeX = player.x - (window.innerWidth * offsetIndex)
