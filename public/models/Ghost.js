@@ -1,18 +1,19 @@
-import { BLOCK_SIZE, DIRECTIONS, PLAYER_SPEED_DIVIDER, ENTITIES } from "../consts.js"
+import { BLOCK_SIZE, DIRECTIONS, PLAYER_SPEED_DIVIDER, ENTITIES, GRID_WIDTH } from "../consts.js"
 
 /**
  * Ghost object
  * @param {number} x indicates object x position
  * @param {number} y indicates object y position
+ * @param {String} color indicates object color
  */
 class Ghost {
-    constructor(x, y) {
+    constructor(x, y, color) {
         this.x = x;
         this.y = y;
         this.size = BLOCK_SIZE;
         this.direction = DIRECTIONS.STOP; // start stopped
         this.speed = BLOCK_SIZE / PLAYER_SPEED_DIVIDER;
-        this.color = "red"
+        this.color = color
         // Move interval is responsible for deciding whether player can or cant change direction (if move interval == player speed divider)
         this.moveInterval = 0
          // ghost currently facing direction

@@ -14,13 +14,13 @@ let stats = new Stats();
 if (SHOW_STATUS) container.appendChild(stats.dom);
 
 // Variables
-let hasConnected = false
 let screenNumber, nScreens;
 let currentMap = MASTER_MAP_LAYOUT //default to master map
 var player = {
 	x: 0,
 	y: 0
 };
+const ghostsColors = ["#FF0000", "#FFB8FF", "#FFB852", "#00FFFF"]
 
 // Socket listeners and functions
 var socket = io()
@@ -28,7 +28,6 @@ var socket = io()
 function screenSetup(screen) {
 	screenNumber = screen.number;
 	nScreens = screen.nScreens;
-	hasConnected = true;
 	// currentMap = screenNumber == 1 ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
 
 	createGrid(currentMap)
@@ -146,14 +145,11 @@ function createGrid(map) {
 					blocks.push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.GHOST: // Ghost
-					ghosts.push(new Ghost(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					for(const color of ghostsColors) {
+						ghosts.push(new Ghost(j * BLOCK_SIZE, i * BLOCK_SIZE, color));
+					}
 					break;
 			}
 		})
 	});
 }
-
-// Create grid for desired map
-// createGrid(currentMap);
-// Start drawing loop
-// draw();
