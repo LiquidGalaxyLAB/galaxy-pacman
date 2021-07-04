@@ -1,4 +1,5 @@
 import { BLOCK_SIZE, DIRECTIONS, PLAYER_SPEED_DIVIDER, ENTITIES, GRID_WIDTH } from "../consts.js"
+import Player from "./Player.js"
 
 /**
  * Ghost object
@@ -6,19 +7,10 @@ import { BLOCK_SIZE, DIRECTIONS, PLAYER_SPEED_DIVIDER, ENTITIES, GRID_WIDTH } fr
  * @param {number} y indicates object y position
  * @param {String} color indicates object color
  */
-class Ghost {
+class Ghost extends Player {
     constructor(x, y, color) {
-        this.x = x;
-        this.y = y;
-        this.size = BLOCK_SIZE;
-        this.direction = DIRECTIONS.STOP; // start stopped
-        this.speed = BLOCK_SIZE / PLAYER_SPEED_DIVIDER;
-        this.color = color
-        // Move interval is responsible for deciding whether player can or cant change direction (if move interval == player speed divider)
-        this.moveInterval = 0
-         // ghost currently facing direction
-         this.facing = DIRECTIONS.UP
-         this.pacmanDir = DIRECTIONS.STOP
+        super(x, y, color)
+        this.pacmanDir = DIRECTIONS.STOP
     }
 
     /**
@@ -77,6 +69,8 @@ class Ghost {
      * @param {Array} map two dimensional array with map layout
      */
     updatePosition(pacmanDir, map) {
+        // TODO: Remove once starts working on multiplayer
+        this.relativeX = null
         switch (this.direction) {
             case DIRECTIONS.UP: // up
                 this.y -= this.speed
@@ -160,17 +154,6 @@ class Ghost {
             case 'left':
                 return DIRECTIONS.LEFT;
         }
-    }
-
-    /**
-     * Get row and column method
-     * @returns {Object} object with attributes 'row' as the index of current row and 'col' as the index of current column
-     */
-     getRowCol() {
-        const row = Math.round(this.y / BLOCK_SIZE)
-        const col = Math.round(this.x / BLOCK_SIZE)
-
-        return { row, col }
     }
 }
 

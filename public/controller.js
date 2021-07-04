@@ -1,11 +1,12 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET, SHOW_STATUS, DIRECTIONS, ENTITIES } from "./consts.js"
+import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET, SHOW_STATUS, DIRECTIONS, ENTITIES, ENABLE_GHOST_COLLISION } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
 import PowerPill from "./models/PowerPill.js";
 import Ghost from "./models/Ghost.js";
 import Stats from "./js/stats.module.js";
+const ghostsColors = ["#FF0000", "#FFB8FF", "#FFB852", "#00FFFF"]
 
 // Show status setup
 let container = document.createElement('div');
@@ -20,7 +21,6 @@ var player = {
 	x: 0,
 	y: 0
 };
-const ghostsColors = ["#FF0000", "#FFB8FF", "#FFB852", "#00FFFF"]
 
 // Socket listeners and functions
 var socket = io()
@@ -90,7 +90,7 @@ function draw() {
 		for(const ghost of ghosts) {
 			const ghostPos = ghost.getRowCol()
 
-			if(ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col) {
+			if(ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION) {
 				currentDirection = DIRECTIONS.STOP
 				pacman.reset()
 			}
@@ -138,7 +138,7 @@ function createGrid(map) {
 				case ENTITIES.PACMAN: // Pacman
 					player.x = j * BLOCK_SIZE
 					player.y = i * BLOCK_SIZE
-					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE, "#FFFF00"));
 					block = 0; // Set to 0 (indicates empty block with no food)
 					break;
 				case ENTITIES.POWERPILL: // PowerPill

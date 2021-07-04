@@ -1,28 +1,18 @@
 import { BLOCK_SIZE, PLAYER_SPEED_DIVIDER, DIRECTIONS, ENTITIES } from "../consts.js"
+import Player from "./Player.js"
 
 /**
  * Pacman object
  * @param {number} x indicates object x position
  * @param {number} y indicates object y position
  */
-class Pacman {
-    constructor(x, y) {
-        this.startX = x;
-        this.startY = y;
-        this.x = x;
-        this.relativeX = x
-        this.y = y
-        this.size = BLOCK_SIZE;
-        this.direction = DIRECTIONS.STOP; // start stopped
-        this.speed = BLOCK_SIZE / PLAYER_SPEED_DIVIDER;
-        this.color = "#FFFF00"
-        // Move interval is responsible for deciding whether player can or cant change direction (if move interval == player speed divider)
-        this.moveInterval = 0
+class Pacman extends Player {
+    constructor(x, y, color) {
+        super(x, y, color)
+
         // variables used for pacman mouth animation
         this.mouthOpenValue = 40
         this.mouthPosition = -1
-        // pacman currently facing direction
-        this.facing = DIRECTIONS.RIGHT
     }
 
     /**
@@ -151,39 +141,6 @@ class Pacman {
                 this.direction = DIRECTIONS.STOP // stop
             }
         }
-    }
-
-    /**
-     * Is player on screen method -> responsible for deciding if player is or is not on screen
-     * @returns {Boolean} true if player is on screen, false if player is not on screen
-     */
-    isPlayerOnScreen() {
-        let width = window.innerWidth
-        if (this.relativeX >= 0 && this.relativeX <= width) return true
-
-        return false
-    }
-
-    /**
-     * Get row and column method
-     * @returns {Object} object with attributes 'row' as the index of current row and 'col' as the index of current column
-     */
-    getRowCol() {
-        const row = Math.round(this.y / BLOCK_SIZE)
-        const col = Math.round(this.relativeX / BLOCK_SIZE)
-
-        return { row, col }
-    }
-
-    /**
-     * Reset method -> resets player position, direction and facing direction
-     */
-    reset() {
-        this.direction = DIRECTIONS.STOP
-        this.facing = DIRECTIONS.RIGHT
-        this.x = this.startX;
-        this.y = this.startY;
-        this.relativeX = this.startX;
     }
 }
 
