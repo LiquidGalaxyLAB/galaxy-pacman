@@ -35,23 +35,26 @@ function updateBlock(ev) {
 }
 
 function print() {
-    let final = "["
+    let final = "[[" //first one is for array, second one is for first row
+    let row = 0
+    let col = 0
     Array.from(grid.children).forEach(child => {
-        let row = 0
-        let col = 0
         let value = classes.find(c => c.name == child.className).value
         final = final.concat(`${value}, `)
         
+        console.log(col, GRID_WIDTH)
         if(col == GRID_WIDTH - 1) {
+            final = final.slice(0, -2) //remove last comma with space (, )
+            final = final.concat(`], [`) //close row brackets
             row++
             col = 0
         } else {
             col++
         }
     })
-    final = final.slice(0, -1)
+    final = final.slice(0, -2) //remove last comma with space (, )
     final = final.concat(']')
-    console.log('map =', final)
+    console.log('export const MAP =', final)
 }
 
 main()
