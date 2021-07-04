@@ -10,6 +10,7 @@ class Pacman {
         this.startX = x;
         this.startY = y;
         this.x = x;
+        this.relativeX = x
         this.y = y
         this.size = BLOCK_SIZE;
         this.direction = DIRECTIONS.STOP; // start stopped
@@ -27,16 +28,9 @@ class Pacman {
     /**
      * Draw method -> responsible for drawing object on canvas
      * @param {Object} ctx canvas context object
-     * @param {Number} screen current screen number
-     * @param {Number} nScreens total number of screens
      */
-    draw(ctx, screen, nScreens, player) {
-        let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
-        let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
-        let relativeX = player.x - (window.innerWidth * offsetIndex)
-
-        let shouldDraw = this.isPlayerOnScreen(relativeX)
-        // console.log(shouldDraw)
+    draw(ctx) {
+        let shouldDraw = this.isPlayerOnScreen()
 
         if (shouldDraw) {
             if (this.mouthOpenValue <= 0)
@@ -51,7 +45,7 @@ class Pacman {
             ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
 
             // set canvas to pacman center and rotate based on currently faced direction
-            ctx.translate(relativeX + radius, this.y + radius)
+            ctx.translate(this.relativeX + radius, this.y + radius)
             switch (this.facing) {
                 case DIRECTIONS.RIGHT:
                     ctx.rotate(0 * Math.PI / 180);
@@ -68,17 +62,18 @@ class Pacman {
             }
 
             // set canvas back to correct coordinates before drawing
-            ctx.translate(-relativeX - radius, -this.y - radius)
+            ctx.translate(-this.relativeX - radius, -this.y - radius)
 
             ctx.beginPath();
-            ctx.arc(relativeX + radius, this.y + radius, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
+            ctx.arc(this.relativeX + radius, this.y + radius, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
 
-            ctx.lineTo(relativeX + radius, this.y + radius);
+            ctx.lineTo(this.relativeX + radius, this.y + radius);
             ctx.fillStyle = this.color;
             ctx.fill();
         }
     }
 
+    // TODO: Review this method
     /**
      * Update position method -> update player position based on current direction and player speed
      * @param {String} newDir new direction from player input
@@ -88,9 +83,9 @@ class Pacman {
      */
     updatePosition(newDir, map, screen, nScreens, player, socket) {
         this.y = player.y
-        let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
-        let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
-        let relativeX = player.x - (window.innerWidth * offsetIndex)
+        const isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+        const offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+        this.relativeX = player.x - (window.innerWidth * offsetIndex)
 
         switch (this.direction) {
             case DIRECTIONS.UP: // up
@@ -103,19 +98,17 @@ class Pacman {
                 break;
             case DIRECTIONS.LEFT: // left
                 this.x -= this.speed
-                relativeX -= this.speed
+                // relativeX -= this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.RIGHT: // right
                 this.x += this.speed
-                relativeX += this.speed
+                // relativeX += this.speed
                 this.moveInterval++
                 break;
         }
-        // console.log(relativeX)
 
-        // TODO: SHOULLD STILL UPDATE BUT DONT LOOK FOR WALLS
-        let isOnScreen = this.isPlayerOnScreen(relativeX)
+        let isOnScreen = this.isPlayerOnScreen()
         if(isOnScreen) {
             socket.emit('set-player-screen', screen)
         }
@@ -127,7 +120,7 @@ class Pacman {
 
             // Get player row and col
             const row = Math.round(this.y / BLOCK_SIZE)
-            const col = Math.round(relativeX / BLOCK_SIZE)
+            const col = Math.round(this.relativeX / BLOCK_SIZE)
 
             // Get blocks adjacent to player
             const above = map[row - 1][col]
@@ -158,22 +151,39 @@ class Pacman {
                 this.direction = DIRECTIONS.STOP // stop
             }
         }
-        // console.log(relativeX)
-
-        // console.log('is', isOnScreen)
-        // console.log('dir', updatedDirection)
-        // if(!isOnScreen && updatedDirection) {
-        //     console.log('update')
-        //     this.direction = updatedDirection;
-        //     this.facing = updatedDirection
-        // }
     }
 
-    isPlayerOnScreen(relativeX) {
+    /**
+     * Is player on screen method -> responsible for deciding if player is or is not on screen
+     * @returns {Boolean} true if player is on screen, false if player is not on screen
+     */
+    isPlayerOnScreen() {
         let width = window.innerWidth
-        if (relativeX >= 0 && relativeX <= width) return true
+        if (this.relativeX >= 0 && this.relativeX <= width) return true
 
         return false
+    }
+
+    /**
+     * Get row and column method
+     * @returns {Object} object with attributes 'row' as the index of current row and 'col' as the index of current column
+     */
+    getRowCol() {
+        const row = Math.round(this.y / BLOCK_SIZE)
+        const col = Math.round(this.relativeX / BLOCK_SIZE)
+
+        return { row, col }
+    }
+
+    /**
+     * Reset method -> resets player position, direction and facing direction
+     */
+    reset() {
+        this.direction = DIRECTIONS.STOP
+        this.facing = DIRECTIONS.RIGHT
+        this.x = this.startX;
+        this.y = this.startY;
+        this.relativeX = this.startX;
     }
 }
 

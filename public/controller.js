@@ -86,7 +86,17 @@ function draw() {
 	//draw each pacman
 	pacmans.forEach(function (pacman) {
 		pacman.updatePosition(currentDirection, currentMap, screenNumber, nScreens, player, socket)
-		console.log('screen', player.screen)
+
+		const pacmanPos = pacman.getRowCol()
+		for(const ghost of ghosts) {
+			const ghostPos = ghost.getRowCol()
+
+			if(ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col) {
+				currentDirection = DIRECTIONS.STOP
+				pacman.reset()
+			}
+		}
+
 		if(screenNumber == 1) {
 			player.x = pacman.x
 			player.y = pacman.y

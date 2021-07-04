@@ -160,6 +160,17 @@ class Ghost {
                 return DIRECTIONS.LEFT;
         }
     }
+
+    /**
+     * Get row and column method
+     * @returns {Object} object with attributes 'row' as the index of current row and 'col' as the index of current column
+     */
+     getRowCol() {
+        const row = Math.round(this.y / BLOCK_SIZE)
+        const col = Math.round(this.x / BLOCK_SIZE)
+
+        return { row, col }
+    }
 }
 
 export default Ghost;
