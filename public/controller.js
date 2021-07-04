@@ -13,8 +13,28 @@ document.body.appendChild(container);
 let stats = new Stats();
 if (SHOW_STATUS) container.appendChild(stats.dom);
 
+// Variables
+let hasConnected = false
+let screenNumber, nScreens;
+let currentMap = MASTER_MAP_LAYOUT //default to master map
+var player = {
+	x: 0,
+	y: 0
+};
+
 // Socket listeners and functions
 var socket = io()
+
+function screenSetup(screen) {
+	screenNumber = screen.number;
+	nScreens = screen.nScreens;
+	hasConnected = true;
+	// currentMap = screenNumber == 1 ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
+
+	createGrid(currentMap)
+	draw()
+}
+socket.on("new-screen", screenSetup)
 
 // Direction from controller
 let currentDirection = DIRECTIONS.STOP // init standing still
@@ -27,6 +47,16 @@ function updateDirection(dir) {
 	currentDirection = dir
 }
 socket.on('updateDirection', updateDirection)
+
+socket.on('update-player', function(pl) {
+	if(screenNumber != 1) {
+		player = pl
+	}
+})
+
+socket.on('set-player-screen', function(screen) {
+	player.screen = screen
+})
 
 // Get canvas element from index.html
 const canvas = document.getElementById('gameCanvas');
@@ -41,8 +71,6 @@ var pacmans = [];
 var blocks = [];
 // Array of blocks in the map
 var ghosts = [];
-// Current map layout
-const currentMap = MASTER_MAP_LAYOUT
 
 // Draw function -> draw objects on canvas
 function draw() {
@@ -57,8 +85,14 @@ function draw() {
 
 	//draw each pacman
 	pacmans.forEach(function (pacman) {
-		pacman.updatePosition(currentDirection, currentMap)
-		pacman.draw(ctx);
+		pacman.updatePosition(currentDirection, currentMap, screenNumber, nScreens, player, socket)
+		console.log('screen', player.screen)
+		if(screenNumber == 1) {
+			player.x = pacman.x
+			player.y = pacman.y
+			socket.emit('update-player', player)
+		}
+		pacman.draw(ctx, screenNumber, nScreens, player);
 	});
 
 	//draw ghosts
@@ -93,6 +127,8 @@ function createGrid(map) {
 					blocks.push(new Food(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.PACMAN: // Pacman
+					player.x = j * BLOCK_SIZE
+					player.y = i * BLOCK_SIZE
 					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					block = 0; // Set to 0 (indicates empty block with no food)
 					break;
@@ -108,6 +144,6 @@ function createGrid(map) {
 }
 
 // Create grid for desired map
-createGrid(currentMap);
+// createGrid(currentMap);
 // Start drawing loop
-draw();
+// draw();

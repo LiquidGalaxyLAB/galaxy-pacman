@@ -27,53 +27,71 @@ class Pacman {
     /**
      * Draw method -> responsible for drawing object on canvas
      * @param {Object} ctx canvas context object
+     * @param {Number} screen current screen number
+     * @param {Number} nScreens total number of screens
      */
-    draw(ctx) {
-        if (this.mouthOpenValue <= 0)
-            this.mouthPosition = 1; // positive for mouth opening
-        else if (this.mouthOpenValue >= 40)
-            this.mouthPosition = -1; // negative for mouth closing
+    draw(ctx, screen, nScreens, player) {
+        let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+        let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+        let relativeX = player.x - (window.innerWidth * offsetIndex)
 
-        this.mouthOpenValue += (5 * this.mouthPosition); // subtract when closing add when opening
+        let shouldDraw = this.isPlayerOnScreen(relativeX)
+        // console.log(shouldDraw)
 
-        // radius is size / 2 so that diameter is equal to block size
-        let radius = this.size / 2
-        ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
-        
-        // set canvas to pacman center and rotate based on currently faced direction
-        ctx.translate(this.x + radius, this.y + radius)
-        switch(this.facing) {
-            case DIRECTIONS.RIGHT:
-                ctx.rotate(0 * Math.PI / 180);
-                break;
-            case DIRECTIONS.DOWN:  
-                ctx.rotate(90 * Math.PI / 180);
-                break;
-            case DIRECTIONS.LEFT:
-                ctx.rotate(180 * Math.PI / 180);
-                break;
-            case DIRECTIONS.UP:
-                ctx.rotate(270 * Math.PI / 180);
-                break;
+        if (shouldDraw) {
+            if (this.mouthOpenValue <= 0)
+                this.mouthPosition = 1; // positive for mouth opening
+            else if (this.mouthOpenValue >= 40)
+                this.mouthPosition = -1; // negative for mouth closing
+
+            this.mouthOpenValue += (5 * this.mouthPosition); // subtract when closing add when opening
+
+            // radius is size / 2 so that diameter is equal to block size
+            let radius = this.size / 2
+            ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
+
+            // set canvas to pacman center and rotate based on currently faced direction
+            ctx.translate(relativeX + radius, this.y + radius)
+            switch (this.facing) {
+                case DIRECTIONS.RIGHT:
+                    ctx.rotate(0 * Math.PI / 180);
+                    break;
+                case DIRECTIONS.DOWN:
+                    ctx.rotate(90 * Math.PI / 180);
+                    break;
+                case DIRECTIONS.LEFT:
+                    ctx.rotate(180 * Math.PI / 180);
+                    break;
+                case DIRECTIONS.UP:
+                    ctx.rotate(270 * Math.PI / 180);
+                    break;
+            }
+
+            // set canvas back to correct coordinates before drawing
+            ctx.translate(-relativeX - radius, -this.y - radius)
+
+            ctx.beginPath();
+            ctx.arc(relativeX + radius, this.y + radius, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
+
+            ctx.lineTo(relativeX + radius, this.y + radius);
+            ctx.fillStyle = this.color;
+            ctx.fill();
         }
-        
-        // set canvas back to correct coordinates before drawing
-        ctx.translate(-this.x - radius, -this.y - radius)
-
-        ctx.beginPath();
-        ctx.arc(this.x + radius, this.y + radius, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
-
-        ctx.lineTo(this.x + radius, this.y + radius);
-        ctx.fillStyle = this.color;
-        ctx.fill();
     }
 
     /**
      * Update position method -> update player position based on current direction and player speed
      * @param {String} newDir new direction from player input
      * @param {Array} map two dimensional array with map layout
+     * @param {Number} screen current screen number
+     * @param {Number} nScreens total number of screens
      */
-    updatePosition(newDir, map) {
+    updatePosition(newDir, map, screen, nScreens, player, socket) {
+        this.y = player.y
+        let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+        let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+        let relativeX = player.x - (window.innerWidth * offsetIndex)
+
         switch (this.direction) {
             case DIRECTIONS.UP: // up
                 this.y -= this.speed
@@ -85,28 +103,38 @@ class Pacman {
                 break;
             case DIRECTIONS.LEFT: // left
                 this.x -= this.speed
+                relativeX -= this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.RIGHT: // right
                 this.x += this.speed
+                relativeX += this.speed
                 this.moveInterval++
                 break;
         }
+        // console.log(relativeX)
 
+        // TODO: SHOULLD STILL UPDATE BUT DONT LOOK FOR WALLS
+        let isOnScreen = this.isPlayerOnScreen(relativeX)
+        if(isOnScreen) {
+            socket.emit('set-player-screen', screen)
+        }
+        
         // If player is able to change direction or player is stopped
-        if (this.moveInterval == PLAYER_SPEED_DIVIDER || this.direction == DIRECTIONS.STOP) {
+        if ((this.moveInterval == PLAYER_SPEED_DIVIDER || this.direction == DIRECTIONS.STOP)) {
+            
             this.moveInterval = 0 // reset move interval
 
             // Get player row and col
             const row = Math.round(this.y / BLOCK_SIZE)
-            const col = Math.round(this.x / BLOCK_SIZE)
+            const col = Math.round(relativeX / BLOCK_SIZE)
 
             // Get blocks adjacent to player
             const above = map[row - 1][col]
             const below = map[row + 1][col]
             const right = map[row][col + 1]
             const left = map[row][col - 1]
-
+            
             // Only allow direction change if next block is not wall
             if (newDir == DIRECTIONS.UP && above !== ENTITIES.WALL) {
                 this.direction = DIRECTIONS.UP;
@@ -130,6 +158,22 @@ class Pacman {
                 this.direction = DIRECTIONS.STOP // stop
             }
         }
+        // console.log(relativeX)
+
+        // console.log('is', isOnScreen)
+        // console.log('dir', updatedDirection)
+        // if(!isOnScreen && updatedDirection) {
+        //     console.log('update')
+        //     this.direction = updatedDirection;
+        //     this.facing = updatedDirection
+        // }
+    }
+
+    isPlayerOnScreen(relativeX) {
+        let width = window.innerWidth
+        if (relativeX >= 0 && relativeX <= width) return true
+
+        return false
     }
 }
 
