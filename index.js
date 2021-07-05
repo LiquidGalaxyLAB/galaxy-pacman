@@ -53,6 +53,7 @@ io.on('connect', socket => {
     socket.on('updateDirection', updateDirection)
 
     socket.on('update-player', function(player) {
+        console.log('player', player)
         io.emit('update-player', player)
     })
 

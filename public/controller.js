@@ -19,7 +19,8 @@ let screenNumber, nScreens;
 let currentMap = MASTER_MAP_LAYOUT //default to master map
 var player = {
 	x: 0,
-	y: 0
+	y: 0,
+	screen: 1
 };
 
 // Socket listeners and functions
@@ -47,13 +48,13 @@ function updateDirection(dir) {
 }
 socket.on('updateDirection', updateDirection)
 
-socket.on('update-player', function(pl) {
-	if(screenNumber != 1) {
+socket.on('update-player', function (pl) {
+	if (screenNumber != 1) {
 		player = pl
 	}
 })
 
-socket.on('set-player-screen', function(screen) {
+socket.on('set-player-screen', function (screen) {
 	player.screen = screen
 })
 
@@ -84,24 +85,30 @@ function draw() {
 
 	//draw each pacman
 	pacmans.forEach(function (pacman) {
-		pacman.updatePosition(currentDirection, currentMap, screenNumber, nScreens, player, socket)
+		console.log(pacman.isPlayerOnScreen())
+		if (pacman.isPlayerOnScreen()) {
+			player.screen = screenNumber;
+			socket.emit('set-player-screen', screenNumber)
+		}
 
+		pacman.updatePosition(currentDirection, currentMap, screenNumber, nScreens, player, socket)
 		const pacmanPos = pacman.getRowCol()
-		for(const ghost of ghosts) {
+		for (const ghost of ghosts) {
 			const ghostPos = ghost.getRowCol()
 
-			if(ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION) {
+			if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION) {
 				currentDirection = DIRECTIONS.STOP
 				pacman.reset()
 			}
 		}
 
-		if(screenNumber == 1) {
+		if (screenNumber == 1) {
 			player.x = pacman.x
 			player.y = pacman.y
 			socket.emit('update-player', player)
 		}
-		pacman.draw(ctx, screenNumber, nScreens, player);
+		pacman.draw(ctx, player, screenNumber);
+		// }
 	});
 
 	//draw ghosts
@@ -145,7 +152,7 @@ function createGrid(map) {
 					blocks.push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.GHOST: // Ghost
-					for(const color of ghostsColors) {
+					for (const color of ghostsColors) {
 						ghosts.push(new Ghost(j * BLOCK_SIZE, i * BLOCK_SIZE, color));
 					}
 					break;

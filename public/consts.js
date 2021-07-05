@@ -17,7 +17,7 @@ export const POWER_PILL_SIZE = BLOCK_SIZE / 3
 // Player speed divider -> denominator for player speed (higher number = slower player)
 export const PLAYER_SPEED_DIVIDER = 10
 // Should show game status? -> true if you want to show status
-export const SHOW_STATUS = true
+export const SHOW_STATUS = false
 // Should have ghost collision? only use false for testing purposes
 export const ENABLE_GHOST_COLLISION = true
 
@@ -148,7 +148,7 @@ export const SLAVE_MAP_LAYOUT = [
   [1, 2, 1, 1, 2, 1, 1, 2, 1],
   [1, 2, 1, 2, 2, 2, 1, 2, 1],
   [1, 2, 1, 2, 2, 2, 1, 2, 1],
-  [1, 1, 1, 2, 2, 2, 1, 1, 1],
+  [1, 1, 1, 2, 3, 2, 1, 1, 1],
   [2, 2, 2, 2, 1, 2, 2, 2, 2],
   [1, 1, 1, 2, 1, 2, 1, 1, 1],
   [1, 2, 2, 2, 1, 2, 2, 2, 1],

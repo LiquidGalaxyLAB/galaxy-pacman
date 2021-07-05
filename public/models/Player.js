@@ -10,7 +10,6 @@ class Player {
         this.startX = x;
         this.startY = y;
         this.x = x;
-        this.relativeX = x
         this.y = y
         this.size = BLOCK_SIZE;
         this.direction = DIRECTIONS.STOP; // start stopped
@@ -31,7 +30,7 @@ class Player {
      */
     isPlayerOnScreen() {
         let width = window.innerWidth
-        if (this.relativeX >= 0 && this.relativeX <= width) return true
+        if (this.x >= 0 && this.x <= width) return true
 
         return false
     }
@@ -42,10 +41,7 @@ class Player {
      */
     getRowCol() {
         const row = Math.round(this.y / BLOCK_SIZE)
-        let col
-        // TODO: Change once starts working on multiplayer
-        if(this.relativeX) col = Math.round(this.relativeX / BLOCK_SIZE)
-        else col = Math.round(this.x / BLOCK_SIZE)
+        const col = Math.round(this.x / BLOCK_SIZE)
 
         return { row, col }
     }
@@ -58,7 +54,6 @@ class Player {
         this.facing = DIRECTIONS.RIGHT
         this.x = this.startX;
         this.y = this.startY;
-        this.relativeX = this.startX;
     }
 }
 
