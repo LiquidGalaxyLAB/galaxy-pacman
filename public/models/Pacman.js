@@ -1,4 +1,4 @@
-import { BLOCK_SIZE, PLAYER_SPEED_DIVIDER, DIRECTIONS, ENTITIES } from "../consts.js"
+import { BLOCK_SIZE, PLAYER_SPEED_DIVIDER, DIRECTIONS, ENTITIES, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT } from "../consts.js"
 import Player from "./Player.js"
 
 /**
@@ -59,18 +59,17 @@ class Pacman extends Player {
         ctx.fill();
     }
 
-    // TODO: Review this method
     /**
      * Update position method -> update player position based on current direction and player speed
      * @param {String} newDir new direction from player input
-     * @param {Array} map two dimensional array with map layout
      * @param {Number} screen current screen number
      * @param {Number} nScreens total number of screens
+     * @param {Object} player object containing player info like position, screen, current map
      */
-    updatePosition(newDir, map, screen, nScreens, player, socket) {
+    updatePosition(newDir, screen, nScreens, player) {
         this.y = player.y
-        const isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
-        const offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+        let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+        let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
         this.x = player.x - (window.innerWidth * offsetIndex)
 
         switch (this.direction) {
@@ -98,11 +97,25 @@ class Pacman extends Player {
 
             // Get player row and col
             const row = Math.round(this.y / BLOCK_SIZE)
-            const playerOffset = isRightScreen ? player.screen - 1 : ((nScreens + 1) - player.screen) * -1;
-            let x = player.x - (window.innerWidth * playerOffset)
+            
+            // Calculate relative x -> player x relative to current screen
+            isRightScreen = player.screen <= (Math.ceil(nScreens / 2));
+            offsetIndex = isRightScreen ? player.screen - 1 : ((nScreens + 1) - player.screen) * -1;
+            let relativeX = Math.abs(player.x - (window.innerWidth * offsetIndex))
+
             let col
-            if(screen == 1) col = Math.round(x / BLOCK_SIZE)
+            // if screen is master consider player offset based on screen
+            if(screen == 1) col = Math.round(relativeX / BLOCK_SIZE)
             else col = Math.round(this.x / BLOCK_SIZE)
+
+            // Set map layout according to screen
+            const maps = {
+                master: MASTER_MAP_LAYOUT,
+                slave: SLAVE_MAP_LAYOUT
+            }
+
+            // Get player current map layout
+            const map = maps[player.currentMap]
 
             // Get blocks adjacent to player
             const above = map[row - 1][col]

@@ -20,7 +20,8 @@ let currentMap = MASTER_MAP_LAYOUT //default to master map
 var player = {
 	x: 0,
 	y: 0,
-	screen: 1
+	screen: 1,
+	currentMap: "master"
 };
 
 // Socket listeners and functions
@@ -29,7 +30,7 @@ var socket = io()
 function screenSetup(screen) {
 	screenNumber = screen.number;
 	nScreens = screen.nScreens;
-	// currentMap = screenNumber == 1 ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
+	currentMap = screenNumber == 1 ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
 
 	createGrid(currentMap)
 	draw()
@@ -48,14 +49,15 @@ function updateDirection(dir) {
 }
 socket.on('updateDirection', updateDirection)
 
-socket.on('update-player', function (pl) {
+socket.on('update-player-pos', function (pl) {
 	if (screenNumber != 1) {
 		player = pl
 	}
 })
 
-socket.on('set-player-screen', function (screen) {
-	player.screen = screen
+socket.on('update-player-info', function (pl) {
+	player.screen = pl.screen
+	player.currentMap = pl.currentMap
 })
 
 // Get canvas element from index.html
@@ -85,13 +87,13 @@ function draw() {
 
 	//draw each pacman
 	pacmans.forEach(function (pacman) {
-		console.log(pacman.isPlayerOnScreen())
 		if (pacman.isPlayerOnScreen()) {
 			player.screen = screenNumber;
-			socket.emit('set-player-screen', screenNumber)
+			player.currentMap = screenNumber == 1 ? 'master' : 'slave'
+			socket.emit('update-player-info', player)
 		}
 
-		pacman.updatePosition(currentDirection, currentMap, screenNumber, nScreens, player, socket)
+		pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
 		const pacmanPos = pacman.getRowCol()
 		for (const ghost of ghosts) {
 			const ghostPos = ghost.getRowCol()
@@ -105,9 +107,9 @@ function draw() {
 		if (screenNumber == 1) {
 			player.x = pacman.x
 			player.y = pacman.y
-			socket.emit('update-player', player)
+			socket.emit('update-player-pos', player)
 		}
-		pacman.draw(ctx, player, screenNumber);
+		pacman.draw(ctx);
 		// }
 	});
 

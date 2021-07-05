@@ -19,7 +19,7 @@ export const PLAYER_SPEED_DIVIDER = 10
 // Should show game status? -> true if you want to show status
 export const SHOW_STATUS = false
 // Should have ghost collision? only use false for testing purposes
-export const ENABLE_GHOST_COLLISION = true
+export const ENABLE_GHOST_COLLISION = false
 
 // Direction constants (used for indicating direction of players)
 //  -> IMPORTANT: each direction has to have a unique value between other directions

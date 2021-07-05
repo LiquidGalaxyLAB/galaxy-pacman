@@ -52,13 +52,13 @@ io.on('connect', socket => {
     }
     socket.on('updateDirection', updateDirection)
 
-    socket.on('update-player', function(player) {
+    socket.on('update-player-pos', function(player) {
         console.log('player', player)
-        io.emit('update-player', player)
+        io.emit('update-player-pos', player)
     })
 
-    socket.on('set-player-screen', function(screen) {
-        io.emit('set-player-screen', screen)
+    socket.on('update-player-info', function(pl) {
+        io.emit('update-player-info', pl)
     })
 })
 

@@ -41,8 +41,7 @@ function print() {
     Array.from(grid.children).forEach(child => {
         let value = classes.find(c => c.name == child.className).value
         final = final.concat(`${value}, `)
-        
-        console.log(col, GRID_WIDTH)
+
         if(col == GRID_WIDTH - 1) {
             final = final.slice(0, -2) //remove last comma with space (, )
             final = final.concat(`], [`) //close row brackets
