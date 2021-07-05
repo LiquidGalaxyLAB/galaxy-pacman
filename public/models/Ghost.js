@@ -1,4 +1,4 @@
-import { BLOCK_SIZE, DIRECTIONS, PLAYER_SPEED_DIVIDER, ENTITIES, GRID_WIDTH } from "../consts.js"
+import { BLOCK_SIZE, DIRECTIONS, PLAYER_SPEED_DIVIDER, ENTITIES } from "../consts.js"
 import Player from "./Player.js"
 
 /**
@@ -35,7 +35,7 @@ class Ghost extends Player {
         const nLegs = 3 // number of legs
         const legRadius = headRadius / nLegs
         ctx.beginPath();
-        for(let i = 0; i < nLegs; i++) {
+        for (let i = 0; i < nLegs; i++) {
             ctx.arc(this.x + ((2 * i + 1) * legRadius), this.y + (2 * headRadius), legRadius, 0, 2 * Math.PI);
         }
         ctx.fill();
@@ -47,9 +47,9 @@ class Ghost extends Player {
         ctx.beginPath();
         // left eye
         ctx.arc(this.x + eyeXCenter, this.y + eyeYCenter, legRadius, 0, 2 * Math.PI);
-        
+
         //right eye
-        ctx.arc(this.x + (2* headRadius) - eyeXCenter, this.y + eyeYCenter, legRadius, 0, 2 * Math.PI);
+        ctx.arc(this.x + (2 * headRadius) - eyeXCenter, this.y + eyeYCenter, legRadius, 0, 2 * Math.PI);
         ctx.fill();
 
         //draw circles for black of the eyes
@@ -59,7 +59,7 @@ class Ghost extends Player {
         ctx.arc(this.x + eyeXCenter, this.y + eyeYCenter, legRadius / 2, 0, 2 * Math.PI);
 
         //right eye
-        ctx.arc(this.x + (2* headRadius) - eyeXCenter, this.y + eyeYCenter, legRadius / 2, 0, 2 * Math.PI);
+        ctx.arc(this.x + (2 * headRadius) - eyeXCenter, this.y + eyeYCenter, legRadius / 2, 0, 2 * Math.PI);
         ctx.fill();
     }
 
@@ -104,27 +104,27 @@ class Ghost extends Player {
             const right = map[row][col + 1]
             const left = map[row][col - 1]
 
-            // Only allow direction change if next block is not wall (inverted for ghost mirrored player behavior)
-            if (this.pacmanDir !== pacmanDir && pacmanDir == DIRECTIONS.UP && below !== ENTITIES.WALL) {
+            // Only allow direction change if next block is not wall or teleporter (inverted for ghost mirrored player behavior)
+            if (this.pacmanDir !== pacmanDir && pacmanDir == DIRECTIONS.UP && below !== ENTITIES.WALL && below !== ENTITIES.TELEPORTER) {
                 this.direction = DIRECTIONS.DOWN;
                 this.facing = DIRECTIONS.DOWN
-            } else if (this.pacmanDir !== pacmanDir && pacmanDir == DIRECTIONS.DOWN && above !== ENTITIES.WALL) {
+            } else if (this.pacmanDir !== pacmanDir && pacmanDir == DIRECTIONS.DOWN && above !== ENTITIES.WALL && above !== ENTITIES.TELEPORTER) {
                 this.direction = DIRECTIONS.UP;
                 this.facing = DIRECTIONS.UP
-            } else if (this.pacmanDir !== pacmanDir && pacmanDir == DIRECTIONS.LEFT && right !== ENTITIES.WALL) {
+            } else if (this.pacmanDir !== pacmanDir && pacmanDir == DIRECTIONS.LEFT && right !== ENTITIES.WALL && right !== ENTITIES.TELEPORTER) {
                 this.direction = DIRECTIONS.RIGHT
                 this.facing = DIRECTIONS.RIGHT
-            } else if (this.pacmanDir !== pacmanDir && pacmanDir == DIRECTIONS.RIGHT && left !== ENTITIES.WALL) {
+            } else if (this.pacmanDir !== pacmanDir && pacmanDir == DIRECTIONS.RIGHT && left !== ENTITIES.WALL && left !== ENTITIES.TELEPORTER) {
                 this.direction = DIRECTIONS.LEFT
                 this.facing = DIRECTIONS.LEFT
             } else if (
-                (this.direction == DIRECTIONS.UP && above == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.DOWN && below == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.LEFT && left == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.RIGHT && right == ENTITIES.WALL)
+                (this.direction == DIRECTIONS.UP && (above == ENTITIES.WALL || above == ENTITIES.TELEPORTER)) ||
+                (this.direction == DIRECTIONS.DOWN && (below == ENTITIES.WALL || below == ENTITIES.TELEPORTER)) ||
+                (this.direction == DIRECTIONS.LEFT && (left == ENTITIES.WALL || left == ENTITIES.TELEPORTER)) ||
+                (this.direction == DIRECTIONS.RIGHT && (right == ENTITIES.WALL || right == ENTITIES.TELEPORTER))
             ) {
                 // If next block is wall get new random direction for ghost
-                this.direction = this.getRandomDirection({above, below, right, left}) // stop
+                this.direction = this.getRandomDirection({ above, below, right, left }) // stop
             }
 
             this.pacmanDir = pacmanDir //update pacman direction
@@ -138,13 +138,13 @@ class Ghost extends Player {
      */
     getRandomDirection(possibleMoves) {
         //only allow movement to blocks that arent walls
-        const allowedMoves = Object.keys(possibleMoves).filter(key => possibleMoves[key] !== ENTITIES.WALL);
+        const allowedMoves = Object.keys(possibleMoves).filter(key => possibleMoves[key] !== ENTITIES.WALL && possibleMoves[key] !== ENTITIES.TELEPORTER);
 
         //get random index from allowed moves
         const index = Math.floor(Math.random() * allowedMoves.length)
 
         //return direction based on random index chosen
-        switch(allowedMoves[index]) {
+        switch (allowedMoves[index]) {
             case 'above':
                 return DIRECTIONS.UP;
             case 'below':
