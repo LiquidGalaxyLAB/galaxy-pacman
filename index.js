@@ -53,13 +53,21 @@ io.on('connect', socket => {
     socket.on('updateDirection', updateDirection)
 
     socket.on('update-player-pos', function(player) {
-        console.log('player', player)
         io.emit('update-player-pos', player)
     })
 
     socket.on('update-player-info', function(pl) {
         io.emit('update-player-info', pl)
     })
+
+    /**
+     * Update direction method -> responsible for emitting to all sockets to update direction
+     * @param {Object} player indicates reset player object
+     */
+    function resetPlayer(player) {
+        io.emit('reset-player', player)
+    }
+    socket.on('reset-player', resetPlayer)
 })
 
 http.listen(port, () => {

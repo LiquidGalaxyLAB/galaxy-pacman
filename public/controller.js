@@ -60,6 +60,14 @@ socket.on('update-player-info', function (pl) {
 	player.currentMap = pl.currentMap
 })
 
+function resetPlayer(pl) {
+	currentDirection = DIRECTIONS.STOP
+	player = pl
+	// TODO: change to player id later (currently player is always index 0)
+	pacmans[0].reset()
+}
+socket.on('reset-player', resetPlayer)
+
 // Get canvas element from index.html
 const canvas = document.getElementById('gameCanvas');
 canvas.height = window.innerHeight - TOP_OFFSET
@@ -101,6 +109,11 @@ function draw() {
 			if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION) {
 				currentDirection = DIRECTIONS.STOP
 				pacman.reset()
+				player.x = pacman.x
+				player.y = pacman.y
+				player.screen = 1
+				player.currentMap = 'master'
+				socket.emit('reset-player', player)
 			}
 		}
 
@@ -110,7 +123,6 @@ function draw() {
 			socket.emit('update-player-pos', player)
 		}
 		pacman.draw(ctx);
-		// }
 	});
 
 	//draw ghosts
