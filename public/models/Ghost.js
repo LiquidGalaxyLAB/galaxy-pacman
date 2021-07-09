@@ -55,11 +55,29 @@ class Ghost extends Player {
         //draw circles for black of the eyes
         ctx.fillStyle = "black";
         ctx.beginPath();
+
+        //calculate pupil offset based on facing direction
+        let xOffset = 0, yOffset = 0
+        switch (this.facing) {
+            case DIRECTIONS.RIGHT:
+                xOffset = legRadius / 2
+                break;
+            case DIRECTIONS.DOWN:
+                yOffset = legRadius / 2
+                break;
+            case DIRECTIONS.LEFT:
+                xOffset = - legRadius / 2
+                break;
+            case DIRECTIONS.UP:
+                yOffset = - legRadius / 2
+                break;
+        }
+
         // left eye
-        ctx.arc(this.x + eyeXCenter, this.y + eyeYCenter, legRadius / 2, 0, 2 * Math.PI);
+        ctx.arc(this.x + eyeXCenter + xOffset, this.y + eyeYCenter + yOffset, legRadius / 2, 0, 2 * Math.PI);
 
         //right eye
-        ctx.arc(this.x + (2 * headRadius) - eyeXCenter, this.y + eyeYCenter, legRadius / 2, 0, 2 * Math.PI);
+        ctx.arc(this.x + (2 * headRadius) - eyeXCenter + xOffset, this.y + eyeYCenter + yOffset, legRadius / 2, 0, 2 * Math.PI);
         ctx.fill();
     }
 
@@ -125,6 +143,7 @@ class Ghost extends Player {
             ) {
                 // If next block is wall get new random direction for ghost
                 this.direction = this.getRandomDirection({ above, below, right, left }) // stop
+                this.facing = this.direction
             }
 
             this.pacmanDir = pacmanDir //update pacman direction
