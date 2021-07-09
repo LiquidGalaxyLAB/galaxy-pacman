@@ -1,5 +1,5 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET, SHOW_STATUS, DIRECTIONS, ENTITIES, ENABLE_GHOST_COLLISION } from "./consts.js"
+import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET, SHOW_STATUS, DIRECTIONS, ENTITIES, ENABLE_GHOST_COLLISION, FOOD_SCORE_VALUE } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
@@ -20,6 +20,7 @@ let currentMap = MASTER_MAP_LAYOUT //default to master map
 var player = {
 	x: 0,
 	y: 0,
+	score: 0,
 	screen: 1,
 	currentMap: "master"
 };
@@ -58,6 +59,7 @@ socket.on('update-player-pos', function (pl) {
 socket.on('update-player-info', function (pl) {
 	player.screen = pl.screen
 	player.currentMap = pl.currentMap
+	player.score = pl.score
 })
 
 function resetPlayer(pl) {
@@ -89,8 +91,10 @@ function draw() {
 	clearCanvas()
 
 	//draw each block
-	blocks.forEach(function (block) {
-		block.draw(ctx);
+	blocks.forEach(row => {
+		row.forEach(block => {
+			if (block) block.draw(ctx);
+		})
 	});
 
 	//draw each pacman
@@ -117,6 +121,24 @@ function draw() {
 			}
 		}
 
+		// food eating logic
+		if (player.currentMap == "master" && screenNumber == 1) {
+			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD) {
+				if (!blocks[pacmanPos.row][pacmanPos.col].wasEaten) {
+					player.score += FOOD_SCORE_VALUE
+					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+					socket.emit('update-player-info', player)
+				}
+			}
+		} else if(player.currentMap == "slave" && screenNumber !== 1) {
+			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD) {
+				pacman.score += FOOD_SCORE_VALUE
+				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+				socket.emit('update-player-info', player)
+			}
+		}
+
+		// emit player position to all screens
 		if (screenNumber == 1) {
 			player.x = pacman.x
 			player.y = pacman.y
@@ -148,27 +170,34 @@ function clearCanvas() {
  */
 function createGrid(map) {
 	map.forEach((row, i) => {
+		blocks.push([])
 		row.forEach((block, j) => {
 			switch (block) {
 				case ENTITIES.WALL: // Wall
-					blocks.push(new WallBlock(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					blocks[i].push(new WallBlock(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.FOOD: // Food
-					blocks.push(new Food(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					blocks[i].push(new Food(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.PACMAN: // Pacman
 					player.x = j * BLOCK_SIZE
 					player.y = i * BLOCK_SIZE
+					let food = new Food(j * BLOCK_SIZE, i * BLOCK_SIZE)
+					food.wasEaten = true
+					blocks[i].push(food)
 					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE, "#FFFF00"));
-					block = 0; // Set to 0 (indicates empty block with no food)
 					break;
 				case ENTITIES.POWERPILL: // PowerPill
-					blocks.push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
+					blocks[i].push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.GHOST: // Ghost
 					for (const color of ghostsColors) {
 						ghosts.push(new Ghost(j * BLOCK_SIZE, i * BLOCK_SIZE, color));
 					}
+					blocks[i].push(null);
+					break;
+				default:
+					blocks[i].push(null);
 					break;
 			}
 		})

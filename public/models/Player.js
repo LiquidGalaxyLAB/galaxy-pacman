@@ -10,7 +10,7 @@ class Player {
         this.startX = x;
         this.startY = y;
         this.x = x;
-        this.y = y
+        this.y = y;
         this.size = BLOCK_SIZE;
         this.direction = DIRECTIONS.STOP; // start stopped
         this.speed = BLOCK_SIZE / PLAYER_SPEED_DIVIDER;

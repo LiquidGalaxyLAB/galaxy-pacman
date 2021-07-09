@@ -20,6 +20,8 @@ export const PLAYER_SPEED_DIVIDER = 10
 export const SHOW_STATUS = false
 // Should have ghost collision? only use false for testing purposes
 export const ENABLE_GHOST_COLLISION = true
+// amount that is added to player score everytime a food is eaten
+export const FOOD_SCORE_VALUE = 5
 
 // Direction constants (used for indicating direction of players)
 //  -> IMPORTANT: each direction has to have a unique value between other directions
