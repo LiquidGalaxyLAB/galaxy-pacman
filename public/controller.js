@@ -123,16 +123,14 @@ function draw() {
 
 		// food eating logic
 		if (player.currentMap == "master" && screenNumber == 1) {
-			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD) {
-				if (!blocks[pacmanPos.row][pacmanPos.col].wasEaten) {
-					player.score += FOOD_SCORE_VALUE
-					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
-					socket.emit('update-player-info', player)
-				}
+			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col].wasEaten) {
+				player.score += FOOD_SCORE_VALUE
+				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+				socket.emit('update-player-info', player)
 			}
-		} else if(player.currentMap == "slave" && screenNumber !== 1) {
-			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD) {
-				pacman.score += FOOD_SCORE_VALUE
+		} else if (player.currentMap == "slave" && screenNumber !== 1) {
+			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col].wasEaten) {
+				player.score += FOOD_SCORE_VALUE
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
 				socket.emit('update-player-info', player)
 			}
