@@ -22,6 +22,10 @@ export const SHOW_STATUS = false
 export const ENABLE_GHOST_COLLISION = true
 // amount that is added to player score everytime a food is eaten
 export const FOOD_SCORE_VALUE = 5
+// amount that is added to player score everytime a power pill is eaten
+export const POWERPILL_SCORE_VALUE = 10
+// how long power pill effect lasts in milliseconds
+export const POWERPILL_DURATION = 4000
 
 // Direction constants (used for indicating direction of players)
 //  -> IMPORTANT: each direction has to have a unique value between other directions

@@ -1,5 +1,19 @@
 //import constants and necessary classes
-import { GRID_WIDTH, BLOCK_SIZE, WALL_LINE_WIDTH, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT, TOP_OFFSET, SHOW_STATUS, DIRECTIONS, ENTITIES, ENABLE_GHOST_COLLISION, FOOD_SCORE_VALUE } from "./consts.js"
+import {
+	GRID_WIDTH,
+	BLOCK_SIZE,
+	WALL_LINE_WIDTH,
+	MASTER_MAP_LAYOUT,
+	SLAVE_MAP_LAYOUT,
+	TOP_OFFSET,
+	SHOW_STATUS,
+	DIRECTIONS,
+	ENTITIES,
+	ENABLE_GHOST_COLLISION,
+	FOOD_SCORE_VALUE,
+	POWERPILL_SCORE_VALUE,
+	POWERPILL_DURATION,
+} from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
@@ -22,8 +36,10 @@ var player = {
 	y: 0,
 	score: 0,
 	screen: 1,
-	currentMap: "master"
+	currentMap: "master",
+	isPoweredUp: false,
 };
+var powerUpTimeout;
 
 // Socket listeners and functions
 var socket = io()
@@ -60,6 +76,7 @@ socket.on('update-player-info', function (pl) {
 	player.screen = pl.screen
 	player.currentMap = pl.currentMap
 	player.score = pl.score
+	player.isPoweredUp = pl.isPoweredUp
 })
 
 function resetPlayer(pl) {
@@ -111,28 +128,46 @@ function draw() {
 			const ghostPos = ghost.getRowCol()
 
 			if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION) {
-				currentDirection = DIRECTIONS.STOP
-				pacman.reset()
-				player.x = pacman.x
-				player.y = pacman.y
-				player.screen = 1
-				player.currentMap = 'master'
-				socket.emit('reset-player', player)
+				if (!pacman.isPoweredUp) {
+					currentDirection = DIRECTIONS.STOP
+					pacman.reset()
+					player.x = pacman.x
+					player.y = pacman.y
+					player.screen = 1
+					player.currentMap = 'master'
+					socket.emit('reset-player', player)
+				} else {
+					ghost.reset()
+				}
 			}
 		}
 
-		// food eating logic
+		// food/powerpill eating logic
 		if (player.currentMap == "master" && screenNumber == 1) {
-			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col].wasEaten) {
+			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += FOOD_SCORE_VALUE
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
 				socket.emit('update-player-info', player)
+			} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
+				player.score += POWERPILL_SCORE_VALUE
+				player.isPoweredUp = true
+				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+				socket.emit('update-player-info', player)
+				if (powerUpTimeout) clearTimeout(powerUpTimeout)
+				powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
 			}
 		} else if (player.currentMap == "slave" && screenNumber !== 1) {
-			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col].wasEaten) {
+			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += FOOD_SCORE_VALUE
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
 				socket.emit('update-player-info', player)
+			} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
+				player.score += POWERPILL_SCORE_VALUE
+				player.isPoweredUp = true
+				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+				socket.emit('update-player-info', player)
+				if (powerUpTimeout) clearTimeout(powerUpTimeout)
+				powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
 			}
 		}
 
@@ -200,4 +235,10 @@ function createGrid(map) {
 			}
 		})
 	});
+}
+
+function stopPowerUp(pacman) {
+	player.isPoweredUp = false
+	pacman.isPoweredUp = false
+	socket.emit('update-player-info', player)
 }

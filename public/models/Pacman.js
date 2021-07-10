@@ -10,6 +10,7 @@ class Pacman extends Player {
     constructor(x, y, color) {
         super(x, y, color)
 
+        this.isPoweredUp = false
         // variables used for pacman mouth animation
         this.mouthOpenValue = 40
         this.mouthPosition = -1
@@ -55,7 +56,7 @@ class Pacman extends Player {
         ctx.arc(this.x + radius, this.y + radius, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
 
         ctx.lineTo(this.x + radius, this.y + radius);
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.isPoweredUp ? 'white' : this.color;
         ctx.fill();
     }
 
@@ -67,6 +68,7 @@ class Pacman extends Player {
      * @param {Object} player object containing player info like position, screen, current map
      */
     updatePosition(newDir, screen, nScreens, player) {
+        this.isPoweredUp = player.isPoweredUp
         this.y = player.y
         let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
         let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
