@@ -71,10 +71,34 @@ function onPlayerConnected() {
 		if (e.code == 'Space') {
 			centerText.style = "display: none"
 			AudioController.play('gameStart')
+			socket.emit('hide-initial-text')
 		}
 	})
 }
 socket.on('new-player', onPlayerConnected)
+
+/**
+ * On Game Start method -> responsible for allowing game start
+ */
+function onGameStart() {
+	allowGameStart = true
+}
+socket.on('allow-game-start', onGameStart)
+
+/**
+ * Hide initial text method -> responsible for hiding text over the game
+ */
+function hideInitText() {
+	centerText.style = "display: none"
+}
+socket.on('hide-initial-text', hideInitText)
+
+function playAudio(name) {
+	if(screenNumber == 1) {
+		socket.emit('play-audio', name)
+	}
+}
+socket.on('play-audio', playAudio)
 
 // Direction from controller
 let currentDirection = DIRECTIONS.STOP // init standing still
@@ -125,7 +149,12 @@ var ghosts = [];
 
 // Draw function -> draw objects on canvas
 function draw() {
-	allowGameStart = AudioController.gameStartSoundFinished
+	if(screenNumber == 1) {
+		allowGameStart = AudioController.gameStartSoundFinished
+		if(allowGameStart) {
+			socket.emit('allow-game-start')
+		}		
+	}
 	//clear before redrawing (important to reset transform before drawing)
 	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	clearCanvas()
@@ -145,7 +174,7 @@ function draw() {
 			socket.emit('update-player-info', player)
 		}
 
-		if (allowGameStart) pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
+		if (allowGameStart || screenNumber !== 1) pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
 		const pacmanPos = pacman.getRowCol()
 		for (const ghost of ghosts) {
 			const ghostPos = ghost.getRowCol()

@@ -69,8 +69,24 @@ io.on('connect', socket => {
     }
     socket.on('reset-player', resetPlayer)
 
-    // emmit player connected to all sockets
+    // emit player connected to all sockets
     socket.on('new-player', () => io.emit('new-player'))
+
+    // emit hide text to all sockets
+    socket.on('hide-initial-text', () => io.emit('hide-initial-text'))
+
+    // emit allow game start to all sockets
+    socket.on('allow-game-start', () => io.emit('allow-game-start'))
+
+    // 
+    /**
+     * Play Audio method -> responsible for emitting specific audio to play
+     * @param {String} name name of the audio to be played
+     */
+    function playAudio(name) {
+        io.emit('play-audio', name)
+    }
+    socket.on('play-audio', playAudio)
 })
 
 http.listen(port, () => {
