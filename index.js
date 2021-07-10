@@ -68,6 +68,9 @@ io.on('connect', socket => {
         io.emit('reset-player', player)
     }
     socket.on('reset-player', resetPlayer)
+
+    // emmit player connected to all sockets
+    socket.on('new-player', () => io.emit('new-player'))
 })
 
 http.listen(port, () => {

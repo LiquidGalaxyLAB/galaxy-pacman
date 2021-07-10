@@ -1,6 +1,9 @@
 import { DIRECTIONS } from "../consts.js"
 var socket = io()
 
+// emit player connected
+socket.emit('new-player')
+
 // Controller setup
 const controllerOptions = {
     mode: "dynamic",

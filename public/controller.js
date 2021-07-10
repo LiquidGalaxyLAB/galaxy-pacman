@@ -20,7 +20,11 @@ import Food from "./models/Food.js"
 import PowerPill from "./models/PowerPill.js";
 import Ghost from "./models/Ghost.js";
 import Stats from "./js/stats.module.js";
+import AudioController from './AudioController.js'
 const ghostsColors = ["#FF0000", "#FFB8FF", "#FFB852", "#00FFFF"]
+
+// game audio setup
+AudioController.loadAll()
 
 // Show status setup
 let container = document.createElement('div');
@@ -38,8 +42,11 @@ var player = {
 	screen: 1,
 	currentMap: "master",
 	isPoweredUp: false,
+	isConnected: false
 };
 var powerUpTimeout;
+var centerText = document.getElementById('center-text')
+var allowGameStart = false
 
 // Socket listeners and functions
 var socket = io()
@@ -54,6 +61,21 @@ function screenSetup(screen) {
 }
 socket.on("new-screen", screenSetup)
 
+/**
+ * On Player Connected method -> responsible for changing display screen and starting event listener for space bar
+ */
+function onPlayerConnected() {
+	player.isConnected = true;
+	centerText.innerHTML = 'PLAYER CONNECTED!<br />PRESS SPACE TO START'
+	window.addEventListener('keydown', e => {
+		if (e.code == 'Space') {
+			centerText.style = "display: none"
+			AudioController.play('gameStart')
+		}
+	})
+}
+socket.on('new-player', onPlayerConnected)
+
 // Direction from controller
 let currentDirection = DIRECTIONS.STOP // init standing still
 
@@ -62,7 +84,7 @@ let currentDirection = DIRECTIONS.STOP // init standing still
  * @param {String} dir indicates the new direction
  */
 function updateDirection(dir) {
-	currentDirection = dir
+	if (allowGameStart) currentDirection = dir
 }
 socket.on('updateDirection', updateDirection)
 
@@ -103,6 +125,7 @@ var ghosts = [];
 
 // Draw function -> draw objects on canvas
 function draw() {
+	allowGameStart = AudioController.gameStartSoundFinished
 	//clear before redrawing (important to reset transform before drawing)
 	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	clearCanvas()
@@ -122,7 +145,7 @@ function draw() {
 			socket.emit('update-player-info', player)
 		}
 
-		pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
+		if (allowGameStart) pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
 		const pacmanPos = pacman.getRowCol()
 		for (const ghost of ghosts) {
 			const ghostPos = ghost.getRowCol()
@@ -136,8 +159,10 @@ function draw() {
 					player.screen = 1
 					player.currentMap = 'master'
 					socket.emit('reset-player', player)
+					AudioController.playUniqueSound('death')
 				} else {
 					ghost.reset()
+					AudioController.play('eatGhost')
 				}
 			}
 		}
@@ -147,11 +172,14 @@ function draw() {
 			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += FOOD_SCORE_VALUE
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+				AudioController.play('munch')
 				socket.emit('update-player-info', player)
 			} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += POWERPILL_SCORE_VALUE
 				player.isPoweredUp = true
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+				AudioController.switchSiren()
+				AudioController.play('munch')
 				socket.emit('update-player-info', player)
 				if (powerUpTimeout) clearTimeout(powerUpTimeout)
 				powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
@@ -160,11 +188,14 @@ function draw() {
 			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += FOOD_SCORE_VALUE
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+				AudioController.play('munch')
 				socket.emit('update-player-info', player)
 			} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += POWERPILL_SCORE_VALUE
 				player.isPoweredUp = true
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+				AudioController.switchSiren()
+				AudioController.play('munch')
 				socket.emit('update-player-info', player)
 				if (powerUpTimeout) clearTimeout(powerUpTimeout)
 				powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
@@ -182,7 +213,7 @@ function draw() {
 
 	//draw ghosts
 	ghosts.forEach(function (ghost) {
-		ghost.updatePosition(currentDirection, currentMap)
+		if (allowGameStart) ghost.updatePosition(currentDirection, currentMap)
 		ghost.draw(ctx)
 	})
 
@@ -241,4 +272,5 @@ function stopPowerUp(pacman) {
 	player.isPoweredUp = false
 	pacman.isPoweredUp = false
 	socket.emit('update-player-info', player)
+	AudioController.switchSiren()
 }
