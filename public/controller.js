@@ -56,6 +56,14 @@ function screenSetup(screen) {
 	nScreens = screen.nScreens;
 	currentMap = screenNumber == 1 ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
 
+	centerText.innerHTML = `${screenNumber == 1 ? 'PRESS SPACE TO START' : ''}`
+	window.addEventListener('keydown', e => {
+		if (e.code == 'Space') {
+			centerText.style = "display: none"
+			AudioController.play('gameStart')
+			socket.emit('hide-initial-text')
+		}
+	})
 	createGrid(currentMap)
 	draw()
 }
@@ -66,14 +74,6 @@ socket.on("new-screen", screenSetup)
  */
 function onPlayerConnected() {
 	player.isConnected = true;
-	centerText.innerHTML = 'PLAYER CONNECTED!<br />PRESS SPACE TO START'
-	window.addEventListener('keydown', e => {
-		if (e.code == 'Space') {
-			centerText.style = "display: none"
-			AudioController.play('gameStart')
-			socket.emit('hide-initial-text')
-		}
-	})
 }
 socket.on('new-player', onPlayerConnected)
 
@@ -93,12 +93,37 @@ function hideInitText() {
 }
 socket.on('hide-initial-text', hideInitText)
 
+/**
+ * Play Audio method -> responsible for playing audio based on name
+ * @param {String} name name of the audio to be played
+ */
 function playAudio(name) {
 	if(screenNumber == 1) {
-		socket.emit('play-audio', name)
+		AudioController.play(name)
 	}
 }
 socket.on('play-audio', playAudio)
+
+/**
+ * Play Audio method -> responsible for playing unique audio based on name
+ * @param {String} name name of the audio to be played
+ */
+ function playUniqueAudio(name) {
+	if(screenNumber == 1) {
+		AudioController.playUniqueAudio(name)
+	}
+}
+socket.on('play-unique-audio', playUniqueAudio)
+
+/**
+ * Switch siren method -> responsible for switching sirens when powerup is picked up/runs out
+ */
+ function switchSiren() {
+	if(screenNumber == 1) {
+		AudioController.switchSiren()
+	}
+}
+socket.on('switch-siren', switchSiren)
 
 // Direction from controller
 let currentDirection = DIRECTIONS.STOP // init standing still
@@ -188,10 +213,10 @@ function draw() {
 					player.screen = 1
 					player.currentMap = 'master'
 					socket.emit('reset-player', player)
-					AudioController.playUniqueSound('death')
+					socket.emit('play-unique-audio', 'death')
 				} else {
 					ghost.reset()
-					AudioController.play('eatGhost')
+					socket.emit('play-audio', 'eatGhost')
 				}
 			}
 		}
@@ -201,14 +226,14 @@ function draw() {
 			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += FOOD_SCORE_VALUE
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
-				AudioController.play('munch')
+				socket.emit('play-audio', 'munch')
 				socket.emit('update-player-info', player)
 			} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += POWERPILL_SCORE_VALUE
 				player.isPoweredUp = true
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
-				AudioController.switchSiren()
-				AudioController.play('munch')
+				socket.emit('switch-siren')
+				socket.emit('play-audio', 'munch')
 				socket.emit('update-player-info', player)
 				if (powerUpTimeout) clearTimeout(powerUpTimeout)
 				powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
@@ -217,14 +242,14 @@ function draw() {
 			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += FOOD_SCORE_VALUE
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
-				AudioController.play('munch')
+				socket.emit('play-audio', 'munch')
 				socket.emit('update-player-info', player)
 			} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 				player.score += POWERPILL_SCORE_VALUE
 				player.isPoweredUp = true
 				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
-				AudioController.switchSiren()
-				AudioController.play('munch')
+				socket.emit('switch-siren')
+				socket.emit('play-audio', 'munch')
 				socket.emit('update-player-info', player)
 				if (powerUpTimeout) clearTimeout(powerUpTimeout)
 				powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
@@ -301,5 +326,5 @@ function stopPowerUp(pacman) {
 	player.isPoweredUp = false
 	pacman.isPoweredUp = false
 	socket.emit('update-player-info', player)
-	AudioController.switchSiren()
+	socket.emit('switch-siren')
 }

@@ -78,7 +78,6 @@ io.on('connect', socket => {
     // emit allow game start to all sockets
     socket.on('allow-game-start', () => io.emit('allow-game-start'))
 
-    // 
     /**
      * Play Audio method -> responsible for emitting specific audio to play
      * @param {String} name name of the audio to be played
@@ -87,6 +86,18 @@ io.on('connect', socket => {
         io.emit('play-audio', name)
     }
     socket.on('play-audio', playAudio)
+
+    /**
+     * Play Unique Audio method -> responsible for emitting specific unique audio to play
+     * @param {String} name name of the audio to be played
+     */
+     function playUniqueAudio(name) {
+        io.emit('play-unique-audio', name)
+    }
+    socket.on('play-unique-audio', playUniqueAudio)
+
+    // emit to all sockets to change siren
+    socket.on('switch-siren', () => io.emit('switch-siren'))
 })
 
 http.listen(port, () => {

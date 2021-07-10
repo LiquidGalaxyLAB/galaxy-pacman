@@ -39,7 +39,7 @@ export default {
         sounds[name].play()
     },
     // play sound only if it is currently not playing (used for sounds that cant be overlayed)
-    playUniqueSound(name) {
+    playUniqueAudio(name) {
         if(!sounds[name].playing()) sounds[name].play()
     },
     switchSiren() {
