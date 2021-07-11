@@ -1,5 +1,7 @@
 import { DIRECTIONS, PACMAN_LIVES } from "../consts.js"
 var socket = io()
+
+// dom variables
 const scoreText = document.getElementById('score-text')
 const centerText = document.getElementById('center-text')
 // setup lives counter
@@ -13,12 +15,17 @@ for (let i = 0; i < PACMAN_LIVES; i++) {
     livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
 }
 
+// player variables
+var currentScore = 0
+
+// socket listeners/functions
 /**
  * Update player score method -> responsible for updating 'Current Score' text in controller
  * @param {Object} player player object containg all player info
  */
 function updatePlayerScore(player) {
-    scoreText.innerHTML = `CURRENT SCORE: ${player.score}`
+    currentScore = player.score
+    scoreText.innerHTML = `CURRENT SCORE: ${currentScore}`
 }
 socket.on('update-player-info', updatePlayerScore)
 
@@ -40,9 +47,9 @@ socket.on('player-death', onPlayerDeath)
  */
 function onGameEnd(victory) {
     if(victory) {
-        centerText.innerHTML = 'YOU WIN!!<br />Insert coin to play again<br />'
+        centerText.innerHTML = `YOU WIN!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
     } else {
-        centerText.innerHTML = 'YOU LOSE!!<br />Insert coin to play again<br />'
+        centerText.innerHTML = `YOU LOSE!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
     }
     const insertbutton = document.createElement('button')
     insertbutton.className = 'insert-button'
