@@ -192,8 +192,14 @@ function onGameRestart(pl) {
 	ghosts = []
 	gameOver = false
 	centerText.style = 'display: none'
+	allowGameStart = false
+
 	// redraw map
 	createGrid(currentMap)
+
+	// restart audio
+	AudioController.gameStartSoundFinished = false
+	AudioController.play('gameStart')
 }
 socket.on('restart-game', onGameRestart)
 
@@ -399,6 +405,8 @@ function stopPowerUp(pacman) {
 function isGameOver(player) {
 	// check player lives
 	if (player.lives <= 0) {
+		AudioController.stop('siren')
+		AudioController.stop('powerSiren')
 		centerText.innerHTML = "GAME OVER"
 		centerText.style = "display: block"
 		socket.emit('game-end', false) //set victory as false
@@ -409,6 +417,8 @@ function isGameOver(player) {
 	const foodsEaten = Object.values(allFoodsEaten)
 	// if no screens with available foods are found -> game over (pacman wins)
 	if (!foodsEaten.includes(false)) {
+		AudioController.stop('siren')
+		AudioController.stop('powerSiren')
 		centerText.innerHTML = "YOU WIN"
 		centerText.style = "display: block"
 		socket.emit('game-end', true) // set victory as true

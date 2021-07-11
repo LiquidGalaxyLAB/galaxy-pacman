@@ -19,7 +19,7 @@ export default {
 
         sounds.gameStart = new Howl({
             src: ['./sounds/game_start.wav'],
-            onend: () =>  {
+            onend: () => {
                 this.gameStartSoundFinished = true
                 sounds.siren.play() // start playing background siren
             }
@@ -49,13 +49,20 @@ export default {
      * @param {String} name name of the sound key for object (must be same as defined in loadAll method)
      */
     playUniqueAudio(name) {
-        if(!sounds[name].playing()) sounds[name].play()
+        if (!sounds[name].playing()) sounds[name].play()
+    },
+    /**
+     * Stop method -> responsible for stopping sound based on name
+     * @param {String} name name of the sound key for object (must be same as defined in loadAll method)
+     */
+    stop(name) {
+        sounds[name].stop()
     },
     /**
      * Switch Siren method -> switch sirens between default siren and powerup siren
      */
     switchSiren() {
-        if(sounds.siren.playing()) {
+        if (sounds.siren.playing()) {
             sounds.siren.stop()
             sounds.powerSiren.play()
         } else {
