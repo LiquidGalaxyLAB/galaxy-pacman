@@ -34,13 +34,14 @@ let stats = new Stats();
 if (SHOW_STATUS) container.appendChild(stats.dom);
 
 // Variables
-let screenNumber, nScreens;
+let screenNumber, nScreens, allFoodsEaten = {};
 let currentMap = MASTER_MAP_LAYOUT //default to master map
 var player = {};
 var powerUpTimeout;
 var centerText = document.getElementById('center-text')
 var allowGameStart = false
 var gameOver = false
+var availableFoods = 0
 
 // Socket listeners and functions
 var socket = io()
@@ -58,6 +59,12 @@ function screenSetup(screen) {
 			socket.emit('hide-initial-text')
 		}
 	})
+
+	// initialize all foods eaten as false on all screens
+	for (let i = 1; i <= nScreens; i++) {
+		allFoodsEaten[i] = false
+	}
+
 	createGrid(currentMap)
 	draw()
 }
@@ -166,6 +173,16 @@ function resetPlayer(pl) {
 }
 socket.on('player-death', resetPlayer)
 
+/**
+ * Set foods eaten method -> set all foods eaten for specific screen
+ * @param {Number} screen number of the screen where all foods were eaten
+ */
+function setFoodsEaten(screen) {
+	allFoodsEaten[screen] = true
+	gameOver = isGameOver(player) //check if game over
+}
+socket.on('set-foods-eaten', setFoodsEaten)
+
 // Get canvas element from index.html
 const canvas = document.getElementById('gameCanvas');
 canvas.height = window.innerHeight - TOP_OFFSET
@@ -239,12 +256,20 @@ function draw() {
 				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 					player.score += FOOD_SCORE_VALUE
 					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+					availableFoods--
+					if (availableFoods == 0) {
+						socket.emit('set-foods-eaten', screenNumber)
+					}
 					socket.emit('play-audio', 'munch')
 					socket.emit('update-player-info', player)
 				} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 					player.score += POWERPILL_SCORE_VALUE
 					player.isPoweredUp = true
 					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+					availableFoods--
+					if (availableFoods == 0) {
+						socket.emit('set-foods-eaten', screenNumber)
+					}
 					socket.emit('switch-siren')
 					socket.emit('play-audio', 'munch')
 					socket.emit('update-player-info', player)
@@ -255,12 +280,20 @@ function draw() {
 				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 					player.score += FOOD_SCORE_VALUE
 					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+					availableFoods--
+					if (availableFoods == 0) {
+						socket.emit('set-foods-eaten', screenNumber)
+					}
 					socket.emit('play-audio', 'munch')
 					socket.emit('update-player-info', player)
 				} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
 					player.score += POWERPILL_SCORE_VALUE
 					player.isPoweredUp = true
 					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+					availableFoods--
+					if (availableFoods == 0) {
+						socket.emit('set-foods-eaten', screenNumber)
+					}
 					socket.emit('switch-siren')
 					socket.emit('play-audio', 'munch')
 					socket.emit('update-player-info', player)
@@ -309,6 +342,7 @@ function createGrid(map) {
 					blocks[i].push(new WallBlock(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.FOOD: // Food
+					availableFoods++
 					blocks[i].push(new Food(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.PACMAN: // Pacman
@@ -320,6 +354,7 @@ function createGrid(map) {
 					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE, "#FFFF00"));
 					break;
 				case ENTITIES.POWERPILL: // PowerPill
+					availableFoods++
 					blocks[i].push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
 				case ENTITIES.GHOST: // Ghost
@@ -348,7 +383,13 @@ function stopPowerUp(pacman) {
  * @param {Object} player player object containing amount of lives and other info
  */
 function isGameOver(player) {
+	// check player lives
 	if (player.lives <= 0) return true
+
+	// check if all foods were eaten
+	const foodsEaten = Object.values(allFoodsEaten)
+	// if no screens with available foods are found -> game over (pacman wins)
+	if (!foodsEaten.includes(false)) return true
 
 	return false
 }

@@ -108,6 +108,15 @@ io.on('connect', socket => {
 
     // emit to all sockets to change siren
     socket.on('switch-siren', () => io.emit('switch-siren'))
+
+    /**
+     * Set foods eaten method -> emit to all sockets that foods have been eaten on a specific screen
+     * @param {Number} screen number of the screen where all foods were eaten
+     */
+    function setFoodsEaten(screen) {
+        io.emit('set-foods-eaten', screen)
+    }
+    socket.on('set-foods-eaten', setFoodsEaten)
 })
 
 http.listen(port, () => {
