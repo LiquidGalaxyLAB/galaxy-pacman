@@ -1,9 +1,11 @@
 
 var sounds = {}
 
-
 export default {
-    gameStartSoundFinished: false,
+    gameStartSoundFinished: false, // flag for game starting sound finished playing -> indicates player that player can start moving
+    /**
+     * Load all method -> responsible for loading all playable sounds
+     */
     async loadAll() {
         sounds.siren = new Howl({
             src: ['./sounds/siren.wav'],
@@ -19,7 +21,7 @@ export default {
             src: ['./sounds/game_start.wav'],
             onend: () =>  {
                 this.gameStartSoundFinished = true
-                sounds.siren.play()
+                sounds.siren.play() // start playing background siren
             }
         });
 
@@ -35,13 +37,23 @@ export default {
             src: ['./sounds/eat_ghost.wav'],
         });
     },
+    /**
+     * Play method -> responsible for playing sound based on name
+     * @param {String} name name of the sound key for object (must be same as defined in loadAll method)
+     */
     play(name) {
         sounds[name].play()
     },
-    // play sound only if it is currently not playing (used for sounds that cant be overlayed)
+    /**
+     * Play unique audio method -> play sound only if it is currently not playing (used for sounds that cant be overlayed)
+     * @param {String} name name of the sound key for object (must be same as defined in loadAll method)
+     */
     playUniqueAudio(name) {
         if(!sounds[name].playing()) sounds[name].play()
     },
+    /**
+     * Switch Siren method -> switch sirens between default siren and powerup siren
+     */
     switchSiren() {
         if(sounds.siren.playing()) {
             sounds.siren.stop()
@@ -51,8 +63,5 @@ export default {
             sounds.siren.play()
         }
     },
-    log() {
-        console.log()
-    }
 }
 

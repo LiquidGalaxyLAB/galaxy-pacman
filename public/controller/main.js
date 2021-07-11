@@ -1,8 +1,18 @@
 import { DIRECTIONS } from "../consts.js"
 var socket = io()
+const scoreText = document.getElementById('score-text')
 
 // emit player connected
 socket.emit('new-player')
+
+/**
+ * Update player score method -> responsible for updating 'Current Score' text in controller
+ * @param {Object} player player object containg all player info
+ */
+function updatePlayerScore(player) {
+    scoreText.innerHTML = `CURRENT SCORE: ${player.score}`
+}
+socket.on('update-player-info', updatePlayerScore)
 
 // Controller setup
 const controllerOptions = {

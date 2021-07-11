@@ -11,6 +11,7 @@ import {
 	ENTITIES,
 	ENABLE_GHOST_COLLISION,
 	FOOD_SCORE_VALUE,
+	GHOSTEAT_SCORE_VALUE,
 	POWERPILL_SCORE_VALUE,
 	POWERPILL_DURATION,
 } from "./consts.js"
@@ -216,6 +217,8 @@ function draw() {
 					socket.emit('play-unique-audio', 'death')
 				} else {
 					ghost.reset()
+					player.score += GHOSTEAT_SCORE_VALUE
+					socket.emit('update-player-info', player)
 					socket.emit('play-audio', 'eatGhost')
 				}
 			}

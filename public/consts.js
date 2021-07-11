@@ -21,9 +21,11 @@ export const SHOW_STATUS = false
 // Should have ghost collision? only use false for testing purposes
 export const ENABLE_GHOST_COLLISION = true
 // amount that is added to player score everytime a food is eaten
-export const FOOD_SCORE_VALUE = 5
+export const FOOD_SCORE_VALUE = 10
+// amount that is added to player score everytime they eat a ghost
+export const GHOSTEAT_SCORE_VALUE = 200
 // amount that is added to player score everytime a power pill is eaten
-export const POWERPILL_SCORE_VALUE = 10
+export const POWERPILL_SCORE_VALUE = 50
 // how long power pill effect lasts in milliseconds
 export const POWERPILL_DURATION = 4000
 
