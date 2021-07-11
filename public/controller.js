@@ -36,18 +36,11 @@ if (SHOW_STATUS) container.appendChild(stats.dom);
 // Variables
 let screenNumber, nScreens;
 let currentMap = MASTER_MAP_LAYOUT //default to master map
-var player = {
-	x: 0,
-	y: 0,
-	score: 0,
-	screen: 1,
-	currentMap: "master",
-	isPoweredUp: false,
-	isConnected: false
-};
+var player = {};
 var powerUpTimeout;
 var centerText = document.getElementById('center-text')
 var allowGameStart = false
+var gameOver = false
 
 // Socket listeners and functions
 var socket = io()
@@ -71,10 +64,11 @@ function screenSetup(screen) {
 socket.on("new-screen", screenSetup)
 
 /**
- * On Player Connected method -> responsible for changing display screen and starting event listener for space bar
+ * On Player Connected method -> responsible for setting player object to basic player
+ * @param {Object} pl new player object from server containing initial information for player
  */
-function onPlayerConnected() {
-	player.isConnected = true;
+function onPlayerConnected(pl) {
+	player = pl;
 }
 socket.on('new-player', onPlayerConnected)
 
@@ -99,7 +93,7 @@ socket.on('hide-initial-text', hideInitText)
  * @param {String} name name of the audio to be played
  */
 function playAudio(name) {
-	if(screenNumber == 1) {
+	if (screenNumber == 1) {
 		AudioController.play(name)
 	}
 }
@@ -109,8 +103,8 @@ socket.on('play-audio', playAudio)
  * Play Audio method -> responsible for playing unique audio based on name
  * @param {String} name name of the audio to be played
  */
- function playUniqueAudio(name) {
-	if(screenNumber == 1) {
+function playUniqueAudio(name) {
+	if (screenNumber == 1) {
 		AudioController.playUniqueAudio(name)
 	}
 }
@@ -119,8 +113,8 @@ socket.on('play-unique-audio', playUniqueAudio)
 /**
  * Switch siren method -> responsible for switching sirens when powerup is picked up/runs out
  */
- function switchSiren() {
-	if(screenNumber == 1) {
+function switchSiren() {
+	if (screenNumber == 1) {
 		AudioController.switchSiren()
 	}
 }
@@ -134,7 +128,13 @@ let currentDirection = DIRECTIONS.STOP // init standing still
  * @param {String} dir indicates the new direction
  */
 function updateDirection(dir) {
-	if (allowGameStart) currentDirection = dir
+	if (allowGameStart) {
+		currentDirection = dir
+		if (dir !== DIRECTIONS.STOP) {
+			player.hasMoved = true;
+			socket.emit('update-player-info', player)
+		}
+	}
 }
 socket.on('updateDirection', updateDirection)
 
@@ -149,15 +149,22 @@ socket.on('update-player-info', function (pl) {
 	player.currentMap = pl.currentMap
 	player.score = pl.score
 	player.isPoweredUp = pl.isPoweredUp
+	player.hasMoved = pl.hasMoved
 })
 
+/**
+ * Reset Player method -> responsible for resetting player on death and defining if game is over
+ * @param {Object} pl player object with reset stats and new amount of lives
+ */
 function resetPlayer(pl) {
+	console.log('reset', pl)
 	currentDirection = DIRECTIONS.STOP
 	player = pl
+	gameOver = isGameOver(pl)
 	// TODO: change to player id later (currently player is always index 0)
 	pacmans[0].reset()
 }
-socket.on('reset-player', resetPlayer)
+socket.on('player-death', resetPlayer)
 
 // Get canvas element from index.html
 const canvas = document.getElementById('gameCanvas');
@@ -175,11 +182,11 @@ var ghosts = [];
 
 // Draw function -> draw objects on canvas
 function draw() {
-	if(screenNumber == 1) {
+	if (screenNumber == 1) {
 		allowGameStart = AudioController.gameStartSoundFinished
-		if(allowGameStart) {
+		if (allowGameStart) {
 			socket.emit('allow-game-start')
-		}		
+		}
 	}
 	//clear before redrawing (important to reset transform before drawing)
 	ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -192,87 +199,91 @@ function draw() {
 		})
 	});
 
-	//draw each pacman
-	pacmans.forEach(function (pacman) {
-		if (pacman.isPlayerOnScreen()) {
-			player.screen = screenNumber;
-			player.currentMap = screenNumber == 1 ? 'master' : 'slave'
-			socket.emit('update-player-info', player)
-		}
+	if (!gameOver) {
+		//draw each pacman
+		pacmans.forEach(function (pacman) {
+			if (pacman.isPlayerOnScreen()) {
+				player.screen = screenNumber;
+				player.currentMap = screenNumber == 1 ? 'master' : 'slave'
+				socket.emit('update-player-info', player)
+			}
 
-		if (allowGameStart || screenNumber !== 1) pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
-		const pacmanPos = pacman.getRowCol()
-		for (const ghost of ghosts) {
-			const ghostPos = ghost.getRowCol()
+			if (allowGameStart || screenNumber !== 1) pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
+			const pacmanPos = pacman.getRowCol()
+			for (const ghost of ghosts) {
+				const ghostPos = ghost.getRowCol()
 
-			if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION) {
-				if (!pacman.isPoweredUp) {
-					currentDirection = DIRECTIONS.STOP
-					pacman.reset()
-					player.x = pacman.x
-					player.y = pacman.y
-					player.screen = 1
-					player.currentMap = 'master'
-					socket.emit('reset-player', player)
-					socket.emit('play-unique-audio', 'death')
-				} else {
-					ghost.reset()
-					player.score += GHOSTEAT_SCORE_VALUE
-					socket.emit('update-player-info', player)
-					socket.emit('play-audio', 'eatGhost')
+				// only collide if position is same and player has moved
+				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && player.hasMoved) {
+					if (!pacman.isPoweredUp) {
+						currentDirection = DIRECTIONS.STOP
+						pacman.reset()
+						player.x = pacman.x
+						player.y = pacman.y
+						player.screen = 1
+						player.currentMap = 'master'
+						player.hasMoved = false
+						socket.emit('player-death', player)
+						socket.emit('play-unique-audio', 'death')
+					} else {
+						ghost.reset()
+						player.score += GHOSTEAT_SCORE_VALUE
+						socket.emit('update-player-info', player)
+						socket.emit('play-audio', 'eatGhost')
+					}
 				}
 			}
-		}
 
-		// food/powerpill eating logic
-		if (player.currentMap == "master" && screenNumber == 1) {
-			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-				player.score += FOOD_SCORE_VALUE
-				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
-				socket.emit('play-audio', 'munch')
-				socket.emit('update-player-info', player)
-			} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-				player.score += POWERPILL_SCORE_VALUE
-				player.isPoweredUp = true
-				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
-				socket.emit('switch-siren')
-				socket.emit('play-audio', 'munch')
-				socket.emit('update-player-info', player)
-				if (powerUpTimeout) clearTimeout(powerUpTimeout)
-				powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
+			// food/powerpill eating logic
+			if (player.currentMap == "master" && screenNumber == 1) {
+				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
+					player.score += FOOD_SCORE_VALUE
+					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+					socket.emit('play-audio', 'munch')
+					socket.emit('update-player-info', player)
+				} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
+					player.score += POWERPILL_SCORE_VALUE
+					player.isPoweredUp = true
+					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+					socket.emit('switch-siren')
+					socket.emit('play-audio', 'munch')
+					socket.emit('update-player-info', player)
+					if (powerUpTimeout) clearTimeout(powerUpTimeout)
+					powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
+				}
+			} else if (player.currentMap == "slave" && screenNumber !== 1) {
+				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
+					player.score += FOOD_SCORE_VALUE
+					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+					socket.emit('play-audio', 'munch')
+					socket.emit('update-player-info', player)
+				} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
+					player.score += POWERPILL_SCORE_VALUE
+					player.isPoweredUp = true
+					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+					socket.emit('switch-siren')
+					socket.emit('play-audio', 'munch')
+					socket.emit('update-player-info', player)
+					if (powerUpTimeout) clearTimeout(powerUpTimeout)
+					powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
+				}
 			}
-		} else if (player.currentMap == "slave" && screenNumber !== 1) {
-			if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-				player.score += FOOD_SCORE_VALUE
-				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
-				socket.emit('play-audio', 'munch')
-				socket.emit('update-player-info', player)
-			} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-				player.score += POWERPILL_SCORE_VALUE
-				player.isPoweredUp = true
-				blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
-				socket.emit('switch-siren')
-				socket.emit('play-audio', 'munch')
-				socket.emit('update-player-info', player)
-				if (powerUpTimeout) clearTimeout(powerUpTimeout)
-				powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
+
+			// emit player position to all screens
+			if (screenNumber == 1) {
+				player.x = pacman.x
+				player.y = pacman.y
+				socket.emit('update-player-pos', player)
 			}
-		}
+			pacman.draw(ctx);
+		});
 
-		// emit player position to all screens
-		if (screenNumber == 1) {
-			player.x = pacman.x
-			player.y = pacman.y
-			socket.emit('update-player-pos', player)
-		}
-		pacman.draw(ctx);
-	});
-
-	//draw ghosts
-	ghosts.forEach(function (ghost) {
-		if (allowGameStart) ghost.updatePosition(currentDirection, currentMap)
-		ghost.draw(ctx)
-	})
+		//draw ghosts
+		ghosts.forEach(function (ghost) {
+			if (allowGameStart) ghost.updatePosition(currentDirection, currentMap)
+			ghost.draw(ctx)
+		})
+	}
 
 	if (SHOW_STATUS) stats.update();
 
@@ -330,4 +341,14 @@ function stopPowerUp(pacman) {
 	pacman.isPoweredUp = false
 	socket.emit('update-player-info', player)
 	socket.emit('switch-siren')
+}
+
+/**
+ * Is Game Over method -> Check if game is over
+ * @param {Object} player player object containing amount of lives and other info
+ */
+function isGameOver(player) {
+	if (player.lives <= 0) return true
+
+	return false
 }

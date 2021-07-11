@@ -5,7 +5,7 @@ export const GRID_HEIGHT = 16;
 // Top offset for adding text on top of game grid
 export const TOP_OFFSET = 0
 // Grid block based on the grid size and top offset chosen
-export const BLOCK_SIZE = (window.innerHeight - TOP_OFFSET) / GRID_HEIGHT;
+export const BLOCK_SIZE = (window.innerHeight - TOP_OFFSET) / GRID_HEIGHT
 // Color of the wall in the map
 export const WALL_COLOR = "#2121DE"
 // Wall line width calculated based on block size (higher denominator = thinner walls)
@@ -28,6 +28,8 @@ export const GHOSTEAT_SCORE_VALUE = 200
 export const POWERPILL_SCORE_VALUE = 50
 // how long power pill effect lasts in milliseconds
 export const POWERPILL_DURATION = 4000
+// pacman amount of lives
+export const PACMAN_LIVES = 5
 
 // Direction constants (used for indicating direction of players)
 //  -> IMPORTANT: each direction has to have a unique value between other directions
@@ -92,8 +94,8 @@ export const SLAVE_MAP_LAYOUT = [
   [1, 2, 2, 2, 1, 2, 2, 2, 1],
   [1, 2, 1, 1, 1, 1, 1, 2, 1],
   [1, 2, 1, 1, 0, 1, 1, 2, 1],
-  [1, 2, 1, 0, 5, 0, 1, 2, 1],
   [1, 2, 1, 0, 3, 0, 1, 2, 1],
+  [1, 2, 1, 0, 5, 0, 1, 2, 1],
   [1, 2, 1, 1, 0, 1, 1, 2, 1],
   [1, 2, 2, 2, 2, 2, 2, 4, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1],

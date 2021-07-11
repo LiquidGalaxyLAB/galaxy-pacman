@@ -1,9 +1,16 @@
-import { DIRECTIONS } from "../consts.js"
+import { DIRECTIONS, PACMAN_LIVES } from "../consts.js"
 var socket = io()
 const scoreText = document.getElementById('score-text')
+// setup lives counter
+const livesContainer = document.getElementById('lives-container')
+const pacmanLifeSprite = document.createElement('img');
+pacmanLifeSprite.src = "../assets/pacman.png"
+pacmanLifeSprite.style = "height: 10vh; display: inline-block;"
 
-// emit player connected
-socket.emit('new-player')
+// start with full lives
+for (let i = 0; i < PACMAN_LIVES; i++) {
+    livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
+}
 
 /**
  * Update player score method -> responsible for updating 'Current Score' text in controller
@@ -13,6 +20,18 @@ function updatePlayerScore(player) {
     scoreText.innerHTML = `CURRENT SCORE: ${player.score}`
 }
 socket.on('update-player-info', updatePlayerScore)
+
+/**
+ * On PLayer Deathg method -> responsible for redrawing lives on bottom right based on player current lives
+ * @param {Object} pl player object containing amout of lives and other information
+ */
+function onPlayerDeath(pl) {
+    livesContainer.innerHTML = ""
+    for (let i = 0; i < pl.lives; i++) {
+        livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
+    }
+}
+socket.on('player-death', onPlayerDeath)
 
 // Controller setup
 const controllerOptions = {
