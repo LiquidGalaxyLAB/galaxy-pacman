@@ -1,6 +1,7 @@
 import { DIRECTIONS, PACMAN_LIVES } from "../consts.js"
 var socket = io()
 const scoreText = document.getElementById('score-text')
+const centerText = document.getElementById('center-text')
 // setup lives counter
 const livesContainer = document.getElementById('lives-container')
 const pacmanLifeSprite = document.createElement('img');
@@ -32,6 +33,29 @@ function onPlayerDeath(pl) {
     }
 }
 socket.on('player-death', onPlayerDeath)
+
+/**
+ * On game end method -> set controller screen based on victory or loss
+ * @param {Boolean} victory boolean responsible for defining victory (true) or loss (false)
+ */
+function onGameEnd(victory) {
+    if(victory) {
+        centerText.innerHTML = 'YOU WIN!!<br />Insert coin to play again<br />'
+    } else {
+        centerText.innerHTML = 'YOU LOSE!!<br />Insert coin to play again<br />'
+    }
+    const insertbutton = document.createElement('button')
+    insertbutton.className = 'insert-button'
+    insertbutton.innerHTML = 'INSERT'
+    centerText.appendChild(insertbutton)
+
+    insertbutton.addEventListener('click', () => {
+        socket.emit('restart-game')
+        window.location.reload()
+    })
+    centerText.style = "display: block"
+}
+socket.on('game-end', onGameEnd)
 
 // Controller setup
 const controllerOptions = {

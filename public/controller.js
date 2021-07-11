@@ -183,6 +183,20 @@ function setFoodsEaten(screen) {
 }
 socket.on('set-foods-eaten', setFoodsEaten)
 
+function onGameRestart(pl) {
+	//restart variables
+	currentDirection = DIRECTIONS.STOP
+	player = pl
+	blocks = []
+	pacmans = []
+	ghosts = []
+	gameOver = false
+	centerText.style = 'display: none'
+	// redraw map
+	createGrid(currentMap)
+}
+socket.on('restart-game', onGameRestart)
+
 // Get canvas element from index.html
 const canvas = document.getElementById('gameCanvas');
 canvas.height = window.innerHeight - TOP_OFFSET
@@ -387,6 +401,7 @@ function isGameOver(player) {
 	if (player.lives <= 0) {
 		centerText.innerHTML = "GAME OVER"
 		centerText.style = "display: block"
+		socket.emit('game-end', false) //set victory as false
 		return true
 	}
 
@@ -396,6 +411,7 @@ function isGameOver(player) {
 	if (!foodsEaten.includes(false)) {
 		centerText.innerHTML = "YOU WIN"
 		centerText.style = "display: block"
+		socket.emit('game-end', true) // set victory as true
 		return true
 	}
 

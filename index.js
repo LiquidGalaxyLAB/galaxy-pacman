@@ -117,6 +117,21 @@ io.on('connect', socket => {
         io.emit('set-foods-eaten', screen)
     }
     socket.on('set-foods-eaten', setFoodsEaten)
+
+    /**
+     * On game end method -> emit to all sockets that game has ended
+     * @param {Boolean} victory boolean responsible for defining victory (true) or loss (false)
+     */
+    function onGameEnd(victory) {
+        io.emit('game-end', victory)
+    }
+    socket.on('game-end', onGameEnd) 
+
+    // On restart game method -> Emit to all sockets to restart game with new player
+    function onRestartGame() {
+        io.emit('restart-game', newPlayer)
+    }
+    socket.on('restart-game', onRestartGame)
 })
 
 http.listen(port, () => {
