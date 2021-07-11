@@ -384,12 +384,20 @@ function stopPowerUp(pacman) {
  */
 function isGameOver(player) {
 	// check player lives
-	if (player.lives <= 0) return true
+	if (player.lives <= 0) {
+		centerText.innerHTML = "GAME OVER"
+		centerText.style = "display: block"
+		return true
+	}
 
 	// check if all foods were eaten
 	const foodsEaten = Object.values(allFoodsEaten)
 	// if no screens with available foods are found -> game over (pacman wins)
-	if (!foodsEaten.includes(false)) return true
+	if (!foodsEaten.includes(false)) {
+		centerText.innerHTML = "YOU WIN"
+		centerText.style = "display: block"
+		return true
+	}
 
 	return false
 }
