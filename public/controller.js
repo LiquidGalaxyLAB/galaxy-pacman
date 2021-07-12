@@ -107,6 +107,17 @@ function playAudio(name) {
 socket.on('play-audio', playAudio)
 
 /**
+ * Stop Audio method -> responsible for stopping audio based on name
+ * @param {String} name name of the audio to be stopped
+ */
+ function stopAudio(name) {
+	if (screenNumber == 1) {
+		AudioController.stop(name)
+	}
+}
+socket.on('stop-audio', stopAudio)
+
+/**
  * Play Audio method -> responsible for playing unique audio based on name
  * @param {String} name name of the audio to be played
  */
@@ -182,6 +193,18 @@ function setFoodsEaten(screen) {
 	gameOver = isGameOver(player) //check if game over
 }
 socket.on('set-foods-eaten', setFoodsEaten)
+
+/**
+ * On set powerup method -> update player isPoweredUp status
+ * @param {Object} payload payload object containing value key (boolean containing isPoweredUp status)
+ */
+function onSetPowerup(payload) {
+	if (payload.value == false) {
+		player.isPoweredUp = false;
+		socket.emit('update-player-info', player)
+	}
+}
+socket.on('set-powerup', onSetPowerup)
 
 function onGameRestart(pl) {
 	//restart variables
@@ -290,11 +313,9 @@ function draw() {
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
-					socket.emit('switch-siren')
 					socket.emit('play-audio', 'munch')
 					socket.emit('update-player-info', player)
-					if (powerUpTimeout) clearTimeout(powerUpTimeout)
-					powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
+					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true})
 				}
 			} else if (player.currentMap == "slave" && screenNumber !== 1) {
 				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
@@ -314,11 +335,9 @@ function draw() {
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
-					socket.emit('switch-siren')
 					socket.emit('play-audio', 'munch')
 					socket.emit('update-player-info', player)
-					if (powerUpTimeout) clearTimeout(powerUpTimeout)
-					powerUpTimeout = setTimeout(stopPowerUp, POWERPILL_DURATION, pacman)
+					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true})
 				}
 			}
 

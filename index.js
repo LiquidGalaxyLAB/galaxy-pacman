@@ -32,6 +32,7 @@ var newPlayer = {
     lives: 5, // TODO: find out how to use const here
     hasMoved: false,
 }
+var powerUpTimeout
 
 
 app.use(express.static(__dirname + filePath))
@@ -125,13 +126,45 @@ io.on('connect', socket => {
     function onGameEnd(victory) {
         io.emit('game-end', victory)
     }
-    socket.on('game-end', onGameEnd) 
+    socket.on('game-end', onGameEnd)
 
     // On restart game method -> Emit to all sockets to restart game with new player
     function onRestartGame() {
         io.emit('restart-game', newPlayer)
     }
     socket.on('restart-game', onRestartGame)
+
+    /**
+     * Stop Audio method -> responsible for emitting specific audio to stop
+     * @param {String} name name of the audio to be stopped
+     */
+     function stopAudio(name) {
+        io.emit('stop-audio', name)
+    }
+    socket.on('stop-audio', stopAudio)
+
+    /**
+     * On powerup finish method -> responsible for switching siren sounds
+     */
+    function onPowerUpFinish() {
+        io.emit('stop-audio', 'powerSiren')
+        io.emit('play-audio', 'siren')
+        io.emit('set-powerup', { value: false })
+    }
+
+    /**
+     * On set powerup method -> responsible for emitting specific audio to stop
+     * @param {Object} payload payload object containing value key (boolean containing isPoweredUp status) and durattion key with powerup duration
+     */
+    function onSetPowerup(payload) {
+        if (payload.value == true) {
+            io.emit('stop-audio', 'siren')
+            io.emit('play-audio', 'powerSiren')
+            if (powerUpTimeout) clearTimeout(powerUpTimeout)
+            powerUpTimeout = setTimeout(onPowerUpFinish, payload.duration)
+        }
+    }
+    socket.on('set-powerup', onSetPowerup)
 })
 
 http.listen(port, () => {
