@@ -37,7 +37,6 @@ if (SHOW_STATUS) container.appendChild(stats.dom);
 let screenNumber, nScreens, allFoodsEaten = {};
 let currentMap = MASTER_MAP_LAYOUT //default to master map
 var player = {};
-var powerUpTimeout;
 var centerText = document.getElementById('center-text')
 var allowGameStart = false
 var gameOver = false
@@ -156,19 +155,29 @@ function updateDirection(dir) {
 }
 socket.on('updateDirection', updateDirection)
 
-socket.on('update-player-pos', function (pl) {
+/**
+ * Update player position method -> responsible for updating player position
+ * @param {Object} pl player object containing player info with new position
+ */
+function updatePlayerPos(pl) {
 	if (screenNumber != 1) {
 		player = pl
 	}
-})
+}
+socket.on('update-player-pos', updatePlayerPos)
 
-socket.on('update-player-info', function (pl) {
+/**
+ * Update player info method -> responsible for updating player info
+ * @param {Object} pl player object containing new player info to update
+ */
+function updatePlayerInfo(pl) {
 	player.screen = pl.screen
 	player.currentMap = pl.currentMap
 	player.score = pl.score
 	player.isPoweredUp = pl.isPoweredUp
 	player.hasMoved = pl.hasMoved
-})
+}
+socket.on('update-player-info', updatePlayerInfo)
 
 /**
  * Reset Player method -> responsible for resetting player on death and defining if game is over
@@ -408,13 +417,6 @@ function createGrid(map) {
 			}
 		})
 	});
-}
-
-function stopPowerUp(pacman) {
-	player.isPoweredUp = false
-	pacman.isPoweredUp = false
-	socket.emit('update-player-info', player)
-	socket.emit('switch-siren')
 }
 
 /**

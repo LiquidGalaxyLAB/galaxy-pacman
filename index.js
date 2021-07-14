@@ -65,13 +65,23 @@ io.on('connect', socket => {
     }
     socket.on('updateDirection', updateDirection)
 
-    socket.on('update-player-pos', function (player) {
-        io.emit('update-player-pos', player)
-    })
+    /**
+     * Update player position method -> responsible for emitting to all sockets to update player position
+     * @param {Object} pl player object containing player info with new position
+     */
+    function updatePlayerPos(pl) {
+        io.emit('update-player-pos', pl)
+    }
+    socket.on('update-player-pos', updatePlayerPos)
 
-    socket.on('update-player-info', function (pl) {
+    /**
+     * Update player info method -> responsible for emitting to all sockets to update player info
+     * @param {Object} pl player object containing player info to update
+     */
+    function updatePlayerInfo(pl) {
         io.emit('update-player-info', pl)
-    })
+    }
+    socket.on('update-player-info', updatePlayerInfo)
 
     /**
      * Reset player method -> responsible for emitting to all sockets to reset player information and removing one life
