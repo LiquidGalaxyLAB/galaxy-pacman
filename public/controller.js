@@ -415,21 +415,27 @@ function createGrid(map) {
 
 // Create Pacman method -> Get a random position for pacman spawn point and create pacman object in pacmans array
 function createPacman() {
-	const currentMap = player.currentMap == 'master' ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
+	const playerMap = player.currentMap == 'master' ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
 
 	const availablePositions = []
-	currentMap.forEach((row, i) => {
+	playerMap.forEach((row, i) => {
 		row.forEach((block, j) => {
-			if (block == ENTITIES.FOOD) availablePositions.push({ x: j * BLOCK_SIZE, y: i * BLOCK_SIZE })
+			if (block == ENTITIES.FOOD) availablePositions.push({ i, j })
 		})
 	})
 
 	const randomIndex = Math.floor(Math.random() * availablePositions.length)
 	
 	if(screenNumber == player.screen) {
-		pacmans.push(new Pacman(availablePositions[randomIndex].x, availablePositions[randomIndex].y, "#FFFF00"))
-		player.startX = availablePositions[randomIndex].x
-		player.startY = availablePositions[randomIndex].y
+		//set food to eaten
+		blocks[availablePositions[randomIndex].i][availablePositions[randomIndex].j].wasEaten = true
+		
+		//create pacman
+		const x = availablePositions[randomIndex].j * BLOCK_SIZE
+		const y = availablePositions[randomIndex].i * BLOCK_SIZE
+		pacmans.push(new Pacman(x, y, "#FFFF00"))
+		player.startX = x
+		player.startY = y
 		socket.emit('update-player-info', player)
 	}
 	else {
