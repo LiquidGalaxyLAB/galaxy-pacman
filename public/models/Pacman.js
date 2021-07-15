@@ -105,10 +105,7 @@ class Pacman extends Player {
             offsetIndex = isRightScreen ? player.screen - 1 : ((nScreens + 1) - player.screen) * -1;
             let relativeX = Math.abs(player.x - (window.innerWidth * offsetIndex))
 
-            let col
-            // if screen is master consider player offset based on screen
-            if(screen == 1) col = Math.round(relativeX / BLOCK_SIZE)
-            else col = Math.round(this.x / BLOCK_SIZE)
+            let col = Math.round(relativeX / BLOCK_SIZE)
 
             // Set map layout according to screen
             const maps = {

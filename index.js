@@ -24,6 +24,8 @@ var screens = [];
 var newPlayer = {
     x: 0,
     y: 0,
+    startX: 0,
+    startY: 0,
     score: 0,
     screen: 1,
     currentMap: "master",

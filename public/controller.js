@@ -109,7 +109,7 @@ socket.on('play-audio', playAudio)
  * Stop Audio method -> responsible for stopping audio based on name
  * @param {String} name name of the audio to be stopped
  */
- function stopAudio(name) {
+function stopAudio(name) {
 	if (screenNumber == 1) {
 		AudioController.stop(name)
 	}
@@ -176,6 +176,8 @@ function updatePlayerInfo(pl) {
 	player.score = pl.score
 	player.isPoweredUp = pl.isPoweredUp
 	player.hasMoved = pl.hasMoved
+	player.startX = pl.startX
+	player.startY = pl.startY
 }
 socket.on('update-player-info', updatePlayerInfo)
 
@@ -184,12 +186,11 @@ socket.on('update-player-info', updatePlayerInfo)
  * @param {Object} pl player object with reset stats and new amount of lives
  */
 function resetPlayer(pl) {
-	console.log('reset', pl)
 	currentDirection = DIRECTIONS.STOP
 	player = pl
 	gameOver = isGameOver(pl)
 	// TODO: change to player id later (currently player is always index 0)
-	pacmans[0].reset()
+	pacmans[0].reset(pl)
 }
 socket.on('player-death', resetPlayer)
 
@@ -271,13 +272,13 @@ function draw() {
 	if (!gameOver) {
 		//draw each pacman
 		pacmans.forEach(function (pacman) {
-			if (pacman.isPlayerOnScreen()) {
+			if (pacman.isPlayerOnScreen() && allowGameStart) {
 				player.screen = screenNumber;
 				player.currentMap = screenNumber == 1 ? 'master' : 'slave'
 				socket.emit('update-player-info', player)
 			}
 
-			if (allowGameStart || screenNumber !== 1) pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
+			if (allowGameStart) pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
 			const pacmanPos = pacman.getRowCol()
 			for (const ghost of ghosts) {
 				const ghostPos = ghost.getRowCol()
@@ -286,9 +287,8 @@ function draw() {
 				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && player.hasMoved) {
 					if (!pacman.isPoweredUp) {
 						currentDirection = DIRECTIONS.STOP
-						pacman.reset()
-						player.x = pacman.x
-						player.y = pacman.y
+						player.x = player.startX
+						player.y = player.startY
 						player.screen = 1
 						player.currentMap = 'master'
 						player.hasMoved = false
@@ -324,7 +324,7 @@ function draw() {
 					}
 					socket.emit('play-audio', 'munch')
 					socket.emit('update-player-info', player)
-					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true})
+					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true })
 				}
 			} else if (player.currentMap == "slave" && screenNumber !== 1) {
 				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
@@ -346,7 +346,7 @@ function draw() {
 					}
 					socket.emit('play-audio', 'munch')
 					socket.emit('update-player-info', player)
-					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true})
+					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true })
 				}
 			}
 
@@ -356,7 +356,7 @@ function draw() {
 				player.y = pacman.y
 				socket.emit('update-player-pos', player)
 			}
-			pacman.draw(ctx);
+			if(allowGameStart || screenNumber == player.screen) pacman.draw(ctx);
 		});
 
 		//draw ghosts
@@ -393,14 +393,6 @@ function createGrid(map) {
 					availableFoods++
 					blocks[i].push(new Food(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
-				case ENTITIES.PACMAN: // Pacman
-					player.x = j * BLOCK_SIZE
-					player.y = i * BLOCK_SIZE
-					let food = new Food(j * BLOCK_SIZE, i * BLOCK_SIZE)
-					food.wasEaten = true
-					blocks[i].push(food)
-					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE, "#FFFF00"));
-					break;
 				case ENTITIES.POWERPILL: // PowerPill
 					availableFoods++
 					blocks[i].push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
@@ -417,6 +409,32 @@ function createGrid(map) {
 			}
 		})
 	});
+
+	createPacman()
+}
+
+// Create Pacman method -> Get a random position for pacman spawn point and create pacman object in pacmans array
+function createPacman() {
+	const currentMap = player.currentMap == 'master' ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
+
+	const availablePositions = []
+	currentMap.forEach((row, i) => {
+		row.forEach((block, j) => {
+			if (block == ENTITIES.FOOD) availablePositions.push({ x: j * BLOCK_SIZE, y: i * BLOCK_SIZE })
+		})
+	})
+
+	const randomIndex = Math.floor(Math.random() * availablePositions.length)
+	
+	if(screenNumber == player.screen) {
+		pacmans.push(new Pacman(availablePositions[randomIndex].x, availablePositions[randomIndex].y, "#FFFF00"))
+		player.startX = availablePositions[randomIndex].x
+		player.startY = availablePositions[randomIndex].y
+		socket.emit('update-player-info', player)
+	}
+	else {
+		pacmans.push(new Pacman(player.startX, player.startY, "#FFFF00"))
+	}
 }
 
 /**

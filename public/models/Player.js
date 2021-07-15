@@ -49,11 +49,17 @@ class Player {
     /**
      * Reset method -> resets player position, direction and facing direction
      */
-    reset() {
+    reset(player) {
         this.direction = DIRECTIONS.STOP
         this.facing = DIRECTIONS.RIGHT
-        this.x = this.startX;
-        this.y = this.startY;
+        if (player) {
+            this.x = player.startX
+            this.y = player.startY
+        } else {
+            this.x = this.startX
+            this.y = this.startY
+        }
+
     }
 }
 
