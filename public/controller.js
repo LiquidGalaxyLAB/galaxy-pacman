@@ -20,6 +20,7 @@ import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
 import PowerPill from "./models/PowerPill.js";
 import Ghost from "./models/Ghost.js";
+import GhostLairDoor from "./models/GhostLairDoor.js";
 import Stats from "./js/stats.module.js";
 import AudioController from './AudioController.js'
 const ghostsColors = ["#FF0000", "#FFB8FF", "#FFB852", "#00FFFF"]
@@ -403,6 +404,9 @@ function createGrid(map) {
 					}
 					blocks[i].push(null);
 					break;
+				case ENTITIES.GHOSTLAIR_DOOR:	
+					blocks[i].push(new GhostLairDoor(j * BLOCK_SIZE, i * BLOCK_SIZE))
+					break;
 				default:
 					blocks[i].push(null);
 					break;
@@ -429,6 +433,7 @@ function createPacman() {
 	if(screenNumber == player.screen) {
 		//set food to eaten
 		blocks[availablePositions[randomIndex].i][availablePositions[randomIndex].j].wasEaten = true
+		availableFoods--;
 		
 		//create pacman
 		const x = availablePositions[randomIndex].j * BLOCK_SIZE

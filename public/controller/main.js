@@ -83,26 +83,23 @@ manager.on('move', function (ev, nipple) {
     if (nipple.direction) controllerDir = nipple.direction.angle
 
     // If player direction is not same as controller emit for socket to update player direction
-    if (playerDir !== controllerDir) {
-        playerDir = controllerDir
 
-        // this switch is needed in case the directions constants are ever changed
-        let dir;
-        switch (controllerDir) {
-            case "up":
-                dir = DIRECTIONS.UP
-                break;
-            case "down":
-                dir = DIRECTIONS.DOWN
-                break;
-            case "right":
-                dir = DIRECTIONS.RIGHT
-                break;
-            case "left":
-                dir = DIRECTIONS.LEFT
-                break;
-        }
-
-        socket.emit('updateDirection', dir)
+    // this switch is needed in case the directions constants are ever changed
+    let dir;
+    switch (controllerDir) {
+        case "up":
+            dir = DIRECTIONS.UP
+            break;
+        case "down":
+            dir = DIRECTIONS.DOWN
+            break;
+        case "right":
+            dir = DIRECTIONS.RIGHT
+            break;
+        case "left":
+            dir = DIRECTIONS.LEFT
+            break;
     }
+
+    socket.emit('updateDirection', dir)
 })

@@ -123,23 +123,23 @@ class Pacman extends Player {
             const left = map[row][col - 1]
 
             // Only allow direction change if next block is not wall
-            if (newDir == DIRECTIONS.UP && above !== ENTITIES.WALL) {
+            if (newDir == DIRECTIONS.UP && above !== ENTITIES.WALL && above !== ENTITIES.GHOSTLAIR_DOOR) {
                 this.direction = DIRECTIONS.UP;
                 this.facing = DIRECTIONS.UP
-            } else if (newDir == DIRECTIONS.DOWN && below !== ENTITIES.WALL) {
+            } else if (newDir == DIRECTIONS.DOWN && below !== ENTITIES.WALL && below !== ENTITIES.GHOSTLAIR_DOOR) {
                 this.direction = DIRECTIONS.DOWN;
                 this.facing = DIRECTIONS.DOWN
-            } else if (newDir == DIRECTIONS.LEFT && left !== ENTITIES.WALL) {
+            } else if (newDir == DIRECTIONS.LEFT && left !== ENTITIES.WALL && left !== ENTITIES.GHOSTLAIR_DOOR) {
                 this.direction = DIRECTIONS.LEFT
                 this.facing = DIRECTIONS.LEFT
-            } else if (newDir == DIRECTIONS.RIGHT && right !== ENTITIES.WALL) {
+            } else if (newDir == DIRECTIONS.RIGHT && right !== ENTITIES.WALL && right !== ENTITIES.GHOSTLAIR_DOOR) {
                 this.direction = DIRECTIONS.RIGHT
                 this.facing = DIRECTIONS.RIGHT
             } else if (
-                (this.direction == DIRECTIONS.UP && above == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.DOWN && below == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.LEFT && left == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.RIGHT && right == ENTITIES.WALL)
+                (this.direction == DIRECTIONS.UP && (above == ENTITIES.WALL || above == ENTITIES.GHOSTLAIR_DOOR)) ||
+                (this.direction == DIRECTIONS.DOWN && (below == ENTITIES.WALL || below == ENTITIES.GHOSTLAIR_DOOR)) ||
+                (this.direction == DIRECTIONS.LEFT && (left == ENTITIES.WALL || left == ENTITIES.GHOSTLAIR_DOOR)) ||
+                (this.direction == DIRECTIONS.RIGHT && (right == ENTITIES.WALL || right == ENTITIES.GHOSTLAIR_DOOR))
             ) {
                 // If next block is wall stop player movement
                 this.direction = DIRECTIONS.STOP // stop
