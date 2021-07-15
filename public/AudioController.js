@@ -58,6 +58,12 @@ export default {
     stop(name) {
         sounds[name].stop()
     },
+    // Stop all method -> responsible for stopping all sounds
+    stopAll() {
+        Object.keys(sounds).forEach(key => {
+            if (sounds[key].playing()) sounds[key].stop()
+        })
+    },
     /**
      * Switch Siren method -> switch sirens between default siren and powerup siren
      */

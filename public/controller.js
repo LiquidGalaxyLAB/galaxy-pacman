@@ -218,6 +218,7 @@ function onSetPowerup(payload) {
 socket.on('set-powerup', onSetPowerup)
 
 function onGameRestart(pl) {
+	AudioController.stopAll()
 	//restart variables
 	currentDirection = DIRECTIONS.STOP
 	player = pl
@@ -398,12 +399,6 @@ function createGrid(map) {
 					availableFoods++
 					blocks[i].push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
-				case ENTITIES.GHOST: // Ghost
-					for (const color of ghostsColors) {
-						ghosts.push(new Ghost(j * BLOCK_SIZE, i * BLOCK_SIZE, color));
-					}
-					blocks[i].push(null);
-					break;
 				case ENTITIES.GHOSTLAIR_DOOR:	
 					blocks[i].push(new GhostLairDoor(j * BLOCK_SIZE, i * BLOCK_SIZE))
 					break;
@@ -415,6 +410,7 @@ function createGrid(map) {
 	});
 
 	createPacman()
+	createGhosts()
 }
 
 // Create Pacman method -> Get a random position for pacman spawn point and create pacman object in pacmans array
@@ -445,6 +441,36 @@ function createPacman() {
 	}
 	else {
 		pacmans.push(new Pacman(player.startX, player.startY, "#FFFF00"))
+	}
+}
+
+// Create Ghosts method -> Get a random position for ghosts spawn point and create ghosts objects in ghosts array
+function createGhosts() {
+	const amountOfGhosts = Math.floor(Math.random() * 4) + 1 // random number from 1 to 4
+
+	let availableColors = Array.from(ghostsColors);
+	console.log(availableColors)
+
+	const availablePositions = []
+	currentMap.forEach((row, i) => {
+		row.forEach((block, j) => {
+			if (block == ENTITIES.GHOSTLAIR) availablePositions.push({ i, j })
+		})
+	})
+
+	for (let i = 0; i < amountOfGhosts; i++) {
+		//get color
+		let randomIndex = Math.floor(Math.random() * availableColors.length)
+		let color = availableColors[randomIndex]
+		availableColors.splice(randomIndex, 1)
+
+		//get position
+		randomIndex = Math.floor(Math.random() * availablePositions.length)
+
+		//create ghost
+		const x = availablePositions[randomIndex].j * BLOCK_SIZE
+		const y = availablePositions[randomIndex].i * BLOCK_SIZE
+		ghosts.push(new Ghost(x, y, color));
 	}
 }
 
