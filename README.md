@@ -37,7 +37,7 @@ After cloning the repository navigate to the cloned folder and install all depen
 cd galaxy-pacman
 
 npm install
-```
+``` 
 
 Once the installation is finished you can run the project by running the command:
 ```bash
