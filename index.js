@@ -150,7 +150,7 @@ io.on('connect', socket => {
      * Stop Audio method -> responsible for emitting specific audio to stop
      * @param {String} name name of the audio to be stopped
      */
-     function stopAudio(name) {
+    function stopAudio(name) {
         io.emit('stop-audio', name)
     }
     socket.on('stop-audio', stopAudio)
@@ -170,9 +170,13 @@ io.on('connect', socket => {
      */
     function onSetPowerup(payload) {
         if (payload.value == true) {
+            if (powerUpTimeout) { 
+                // if already powered up
+                io.emit('stop-audio', 'powerSiren') //stop current sound before starting again
+                clearTimeout(powerUpTimeout)
+            }
             io.emit('stop-audio', 'siren')
             io.emit('play-audio', 'powerSiren')
-            if (powerUpTimeout) clearTimeout(powerUpTimeout)
             powerUpTimeout = setTimeout(onPowerUpFinish, payload.duration)
         }
     }
