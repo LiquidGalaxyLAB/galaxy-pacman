@@ -435,7 +435,7 @@ function createPacman(player) {
 		//create pacman
 		const x = availablePositions[randomIndex].j * BLOCK_SIZE
 		const y = availablePositions[randomIndex].i * BLOCK_SIZE
-		pacmans.push(new Pacman(x, y, "#FFFF00", player.id))
+		pacmans.push(new Pacman(x, y, player.color, player.id))
 		player.x = x
 		player.y = y
 		player.startX = x
@@ -443,7 +443,7 @@ function createPacman(player) {
 		socket.emit('update-players-info', player)
 
 		const pacman = {
-			x, y, color: "#FFFF00", id: player.id, screen: screenNumber,
+			x, y, color: player.color, id: player.id, screen: screenNumber,
 		}
 		socket.emit('create-pacman', pacman)
 	}

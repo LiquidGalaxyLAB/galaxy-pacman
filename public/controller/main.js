@@ -4,6 +4,10 @@ var socket = io()
 // dom variables
 const scoreText = document.getElementById('score-text')
 const centerText = document.getElementById('center-text')
+const colorPicker = document.getElementById('color-picker')
+const colorSubmitButton = document.getElementById('pick-color-btn')
+const colorPickerContainer = document.getElementById('color-picker-container')
+const controllerConatiner = document.getElementById('controller-container')
 // setup lives counter
 const livesContainer = document.getElementById('lives-container')
 const pacmanLifeSprite = document.createElement('img');
@@ -14,6 +18,18 @@ pacmanLifeSprite.style = "height: 10vh; display: inline-block;"
 for (let i = 0; i < PACMAN_LIVES; i++) {
     livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
 }
+
+/**
+ * On Color Submit method -> responsible for setting player color and emitting that a new player has connected
+ */
+function onColorSubmit() {
+    newPlayer.color = colorPicker.value
+    newPlayer.id = socket.id
+    socket.emit('new-player', newPlayer)
+    colorPickerContainer.style = 'visibility: hidden'
+    controllerConatiner.style = 'visibility: visible'
+}
+colorSubmitButton.addEventListener('click', onColorSubmit)
 
 // player variables
 var currentScore = 0
@@ -33,12 +49,6 @@ var newPlayer = {
     hasMoved: false,
 }
 
-// socket listeners/functions
-function onConnect() {
-    newPlayer.id = socket.id
-    socket.emit('new-player', newPlayer)
-}
-socket.on('connect', onConnect)
 /**
  * Update player score method -> responsible for updating 'Current Score' text in controller
  * @param {Object} players players object containg all players info
@@ -73,7 +83,7 @@ function onGameEnd(victory) {
         centerText.innerHTML = `YOU LOSE!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
     }
     const insertbutton = document.createElement('button')
-    insertbutton.className = 'insert-button'
+    insertbutton.className = 'custom-button'
     insertbutton.innerHTML = 'INSERT'
     centerText.appendChild(insertbutton)
 
