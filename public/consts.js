@@ -15,7 +15,7 @@ export const FOOD_SIZE = BLOCK_SIZE / 10
 // Power-up food pill size calculated based on block size (higher denominator = smaller pill)
 export const POWER_PILL_SIZE = BLOCK_SIZE / 3
 // Player speed divider -> denominator for player speed (higher number = slower player)
-export const PLAYER_SPEED_DIVIDER = 10
+export const PLAYER_SPEED_DIVIDER = 20
 // Should show game status? -> true if you want to show status
 export const SHOW_STATUS = false
 // Should have ghost collision? only use false for testing purposes

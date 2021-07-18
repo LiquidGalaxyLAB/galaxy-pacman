@@ -17,17 +17,38 @@ for (let i = 0; i < PACMAN_LIVES; i++) {
 
 // player variables
 var currentScore = 0
+var newPlayer = {
+    id: null,
+    x: 0,
+    y: 0,
+    startX: 0,
+    startY: 0,
+    score: 0,
+    screen: 1,
+    direction: DIRECTIONS.STOP,
+    currentMap: "master",
+    isPoweredUp: false,
+    isConnected: false,
+    lives: PACMAN_LIVES,
+    hasMoved: false,
+}
 
 // socket listeners/functions
+function onConnect() {
+    newPlayer.id = socket.id
+    socket.emit('new-player', newPlayer)
+}
+socket.on('connect', onConnect)
 /**
  * Update player score method -> responsible for updating 'Current Score' text in controller
- * @param {Object} player player object containg all player info
+ * @param {Object} players players object containg all players info
  */
-function updatePlayerScore(player) {
-    currentScore = player.score
+function updatePlayerScore(players) {
+    const player = players[socket.id]
+    currentScore = player?.score || 0
     scoreText.innerHTML = `CURRENT SCORE: ${currentScore}`
 }
-socket.on('update-player-info', updatePlayerScore)
+socket.on('update-players-info', updatePlayerScore)
 
 /**
  * On PLayer Deathg method -> responsible for redrawing lives on bottom right based on player current lives
@@ -75,8 +96,7 @@ var manager = nipplejs.create(controllerOptions)
 
 // Controller direction angle
 let controllerDir = DIRECTIONS.STOP;
-// player direction angle
-let playerDir = DIRECTIONS.STOP;
+
 // Controller movement listener
 manager.on('move', function (ev, nipple) {
     // Save controller direction
@@ -101,5 +121,5 @@ manager.on('move', function (ev, nipple) {
             break;
     }
 
-    socket.emit('updateDirection', dir)
+    socket.emit('update-direction', dir)
 })

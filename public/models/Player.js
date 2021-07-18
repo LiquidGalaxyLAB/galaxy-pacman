@@ -6,7 +6,8 @@ import { BLOCK_SIZE, PLAYER_SPEED_DIVIDER, DIRECTIONS, ENTITIES } from "../const
  * @param {number} y indicates object y position
  */
 class Player {
-    constructor(x, y, color) {
+    constructor(x, y, color, id) {
+        this.id = id
         this.startX = x;
         this.startY = y;
         this.x = x;

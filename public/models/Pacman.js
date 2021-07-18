@@ -7,8 +7,8 @@ import Player from "./Player.js"
  * @param {number} y indicates object y position
  */
 class Pacman extends Player {
-    constructor(x, y, color) {
-        super(x, y, color)
+    constructor(x, y, color, id) {
+        super(x, y, color, id)
 
         this.isPoweredUp = false
         // variables used for pacman mouth animation
@@ -76,19 +76,15 @@ class Pacman extends Player {
 
         switch (this.direction) {
             case DIRECTIONS.UP: // up
-                this.y -= this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.DOWN: // down
-                this.y += this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.LEFT: // left
-                this.x -= this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.RIGHT: // right
-                this.x += this.speed
                 this.moveInterval++
                 break;
         }
@@ -96,10 +92,8 @@ class Pacman extends Player {
         // If player is able to change direction or player is stopped
         if ((this.moveInterval == PLAYER_SPEED_DIVIDER || this.direction == DIRECTIONS.STOP)) {
             this.moveInterval = 0 // reset move interval
-
             // Get player row and col
             const row = Math.round(this.y / BLOCK_SIZE)
-            
             // Calculate relative x -> player x relative to current screen
             isRightScreen = player.screen <= (Math.ceil(nScreens / 2));
             offsetIndex = isRightScreen ? player.screen - 1 : ((nScreens + 1) - player.screen) * -1;
@@ -143,6 +137,21 @@ class Pacman extends Player {
             ) {
                 // If next block is wall stop player movement
                 this.direction = DIRECTIONS.STOP // stop
+            }
+
+            switch (this.direction) {
+                case DIRECTIONS.UP: // up
+                    this.y -= BLOCK_SIZE
+                    break;
+                case DIRECTIONS.DOWN: // down
+                    this.y += BLOCK_SIZE
+                    break;
+                case DIRECTIONS.LEFT: // left
+                    this.x -= BLOCK_SIZE
+                    break;
+                case DIRECTIONS.RIGHT: // right
+                    this.x += BLOCK_SIZE
+                    break;
             }
         }
     }
