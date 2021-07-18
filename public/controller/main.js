@@ -1,5 +1,6 @@
 import { DIRECTIONS, PACMAN_LIVES } from "../consts.js"
 var socket = io()
+let nScreens; // variable will be set to have total number of screens in screenSetup method
 
 // dom variables
 const scoreText = document.getElementById('score-text')
@@ -8,6 +9,7 @@ const colorPicker = document.getElementById('color-picker')
 const colorSubmitButton = document.getElementById('pick-color-btn')
 const colorPickerContainer = document.getElementById('color-picker-container')
 const controllerConatiner = document.getElementById('controller-container')
+
 // setup lives counter
 const livesContainer = document.getElementById('lives-container')
 const pacmanLifeSprite = document.createElement('img');
@@ -19,18 +21,6 @@ for (let i = 0; i < PACMAN_LIVES; i++) {
     livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
 }
 
-/**
- * On Color Submit method -> responsible for setting player color and emitting that a new player has connected
- */
-function onColorSubmit() {
-    newPlayer.color = colorPicker.value
-    newPlayer.id = socket.id
-    socket.emit('new-player', newPlayer)
-    colorPickerContainer.style = 'visibility: hidden'
-    controllerConatiner.style = 'visibility: visible'
-}
-colorSubmitButton.addEventListener('click', onColorSubmit)
-
 // player variables
 var currentScore = 0
 var newPlayer = {
@@ -40,14 +30,47 @@ var newPlayer = {
     startX: 0,
     startY: 0,
     score: 0,
-    screen: 1,
     direction: DIRECTIONS.STOP,
-    currentMap: "master",
     isPoweredUp: false,
     isConnected: false,
     lives: PACMAN_LIVES,
     hasMoved: false,
 }
+/**
+ * On Color Submit method -> responsible for setting player color and calling onNewPlayer mehtod
+ */
+ function onColorSubmit() {
+    newPlayer.color = colorPicker.value
+    onNewPlayer()
+}
+colorSubmitButton.addEventListener('click', onColorSubmit)
+
+/**
+ * On New Player method -> responsible for setting player object and emitting that a new player has connected
+ */
+function onNewPlayer() {
+    newPlayer.id = socket.id
+    console.log('nScrens', nScreens)
+    newPlayer.screen = Math.floor(Math.random() * nScreens) + 1 //random screen from 1 to number of screens
+    newPlayer.currentMap = newPlayer.screen == 1 ? 'master' : 'slave'
+    socket.emit('new-player', newPlayer)
+    console.log('new player', newPlayer)
+
+    //switch to controller
+    colorPickerContainer.style = 'visibility: hidden'
+    controllerConatiner.style = 'visibility: visible'
+}
+
+// socket functions/event listeners
+/**
+ * Screen setup method -> responsible for setting variables for screen
+ * @param {Object} screen screen object containing info like screen number and total of screens
+ */
+ function screenSetup(screen) {
+     console.log('screen', screen)
+	nScreens = screen.nScreens;
+}
+socket.on("new-screen", screenSetup)
 
 /**
  * Update player score method -> responsible for updating 'Current Score' text in controller

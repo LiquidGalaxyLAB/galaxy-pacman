@@ -155,6 +155,20 @@ class Pacman extends Player {
             }
         }
     }
+
+    /**
+     * Update fixed position method -> responsible for updating position with relative x based on screen but not allowing position change
+     * @param {Number} screen current screen number
+     * @param {Number} nScreens total number of screens
+     * @param {Object} player object containing player info like position, screen, current map
+     */
+    updateFixedPosition(screen, nScreens, player) {
+        this.isPoweredUp = player.isPoweredUp
+        this.y = player.y
+        let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+        let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+        this.x = player.x - (window.innerWidth * offsetIndex)
+    }
 }
 
 export default Pacman;

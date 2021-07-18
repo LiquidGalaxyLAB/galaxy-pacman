@@ -37,7 +37,7 @@ if (SHOW_STATUS) container.appendChild(stats.dom);
 // Variables
 let screenNumber, nScreens, allFoodsEaten = {};
 let currentMap = MASTER_MAP_LAYOUT //default to master map
-var players = {};
+var players = {}; // object containing players information. the object key is the id of the players constroller socket
 var centerText = document.getElementById('center-text')
 var allowGameStart = false
 var gameOver = false
@@ -107,7 +107,7 @@ socket.on('update-players-object', onUpdatePlayersObj)
  */
 function onCreatePacman(pacman) {
 	if (screenNumber !== pacman.screen) {
-		pacmans.push(new Pacman(pacman.startX, pacman.startY, pacman.color, pacman.id))
+		pacmans.push(new Pacman(pacman.x, pacman.y, pacman.color, pacman.id))
 	}
 }
 socket.on('create-pacman', onCreatePacman)
@@ -273,6 +273,7 @@ function draw() {
 			const id = pacman.id
 			checkPlayerScreen(id)
 			if (allowGameStart) pacman.updatePosition(players[id].direction, screenNumber, nScreens, players[id])
+			else pacman.updateFixedPosition(screenNumber, nScreens, players[id])
 			const pacmanPos = pacman.getRowCol()
 			for (const ghost of ghosts) {
 				const ghostPos = ghost.getRowCol()
@@ -283,8 +284,6 @@ function draw() {
 						players[id].direction = DIRECTIONS.STOP
 						players[id].x = players[id].startX
 						players[id].y = players[id].startY
-						players[id].screen = 1
-						players[id].currentMap = 'master'
 						players[id].hasMoved = false
 						socket.emit('update-players-info', players[id])
 						socket.emit('player-death', players[id])
@@ -321,11 +320,11 @@ function draw() {
 					socket.emit('update-players-info', players[id])
 					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: id })
 				}
-			} else if (players[id].currentMap == "slave" && screenNumber !== 1) {
+			} else if (players[id].currentMap == "slave" && screenNumber !== 1 && players[id].screen == screenNumber) {
 				const playerPos = players[id].pos
 				//relative col calculation
 				let isRightScreen = players[id].screen <= (Math.ceil(nScreens / 2));
-				let offsetIndex = isRightScreen ? players[id].screen - 1 : ((nScreens + 1) - player.screen) * -1;
+				let offsetIndex = isRightScreen ? players[id].screen - 1 : ((nScreens + 1) - players[id].screen) * -1;
 				let realtiveCol = playerPos.col - (offsetIndex * GRID_WIDTH)
 
 				if (currentMap[playerPos.row][realtiveCol] == ENTITIES.FOOD && !blocks[playerPos.row][realtiveCol]?.wasEaten) {
@@ -358,7 +357,7 @@ function draw() {
 				players[id].pos = pacman.getRowCol()
 				socket.emit('update-players-info', players[id])
 			}
-			if (allowGameStart || screenNumber == players[id].screen) pacman.draw(ctx);
+			pacman.draw(ctx);
 		});
 
 		//draw ghosts
@@ -433,19 +432,31 @@ function createPacman(player) {
 		availableFoods--;
 
 		//create pacman
+
+		// get random coordinates
 		const x = availablePositions[randomIndex].j * BLOCK_SIZE
 		const y = availablePositions[randomIndex].i * BLOCK_SIZE
-		pacmans.push(new Pacman(x, y, player.color, player.id))
-		player.x = x
+
+		// adapt based on screen
+		let isRightScreen = player.screen <= (Math.ceil(nScreens / 2));
+		let offsetIndex = isRightScreen ? player.screen - 1 : ((nScreens + 1) - player.screen) * -1;
+		let relativeX = x + (window.innerWidth * offsetIndex)
+		const masterPacman = new Pacman(x, y, player.color, null) // pacman with original coordinates (used for getting row and col)
+
+		// create pacman
+		const newPacman = new Pacman(relativeX, y, player.color, player.id) // pacman with relative coordinates
+		pacmans.push(newPacman)
+		player.x = relativeX
 		player.y = y
-		player.startX = x
+		player.startX = relativeX
 		player.startY = y
+		player.pos = masterPacman.getRowCol()
 		socket.emit('update-players-info', player)
 
-		const pacman = {
-			x, y, color: player.color, id: player.id, screen: screenNumber,
+		const pacmanAux = {
+			x: relativeX, y, color: player.color, id: player.id, screen: screenNumber,
 		}
-		socket.emit('create-pacman', pacman)
+		socket.emit('create-pacman', pacmanAux)
 	}
 	console.log('pamcans', pacmans)
 }
