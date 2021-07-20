@@ -11,6 +11,8 @@ class Pacman extends Player {
         super(x, y, color, id)
 
         this.isPoweredUp = false
+        this.verticalMoveCycle = 0
+        this.horizontalMoveCycle = 0
         // variables used for pacman mouth animation
         this.mouthOpenValue = 40
         this.mouthPosition = -1
@@ -33,7 +35,7 @@ class Pacman extends Player {
         ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
 
         // set canvas to pacman center and rotate based on currently faced direction
-        ctx.translate(this.x + radius, this.y + radius)
+        ctx.translate(this.x + radius + this.horizontalMoveCycle, this.y + radius + this.verticalMoveCycle)
         switch (this.facing) {
             case DIRECTIONS.RIGHT:
                 ctx.rotate(0 * Math.PI / 180);
@@ -50,24 +52,24 @@ class Pacman extends Player {
         }
 
         // set canvas back to correct coordinates before drawing
-        ctx.translate(-this.x - radius, -this.y - radius)
+        ctx.translate(-this.x - radius - this.horizontalMoveCycle, -this.y - radius - this.verticalMoveCycle)
 
         ctx.beginPath();
-        ctx.arc(this.x + radius, this.y + radius, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
+        ctx.arc(this.x + radius + this.horizontalMoveCycle, this.y + radius + this.verticalMoveCycle, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
 
-        ctx.lineTo(this.x + radius, this.y + radius);
+        ctx.lineTo(this.x + radius + this.horizontalMoveCycle, this.y + radius + this.verticalMoveCycle);
         ctx.fillStyle = this.isPoweredUp ? 'white' : this.color;
         ctx.fill();
     }
 
     /**
-     * Update position method -> update player position based on current direction and player speed
+     * Update direction method -> update player direction based on current direction input
      * @param {String} newDir new direction from player input
      * @param {Number} screen current screen number
      * @param {Number} nScreens total number of screens
      * @param {Object} player object containing player info like position, screen, current map
      */
-    updatePosition(newDir, screen, nScreens, player) {
+    updateDirection(newDir, screen, nScreens, player) {
         this.isPoweredUp = player.isPoweredUp
         this.y = player.y
         let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
@@ -138,7 +140,32 @@ class Pacman extends Player {
                 // If next block is wall stop player movement
                 this.direction = DIRECTIONS.STOP // stop
             }
+        }
+    }
 
+    /**
+     * Update positionm method -> update player move cycle for animation and after animation is complete update position based on direction
+     */
+    updatePosition() {
+        switch (this.direction) {
+            case DIRECTIONS.UP: // up
+                this.verticalMoveCycle -= this.speed
+                break;
+            case DIRECTIONS.DOWN: // down
+                this.verticalMoveCycle += this.speed
+                break;
+            case DIRECTIONS.LEFT: // left
+                this.horizontalMoveCycle -= this.speed
+                break;
+            case DIRECTIONS.RIGHT: // right
+                this.horizontalMoveCycle += this.speed
+                break;
+        }
+
+        if ((this.moveInterval == PLAYER_SPEED_DIVIDER - 1 || this.direction == DIRECTIONS.STOP)) {
+            this.verticalMoveCycle = 0
+            this.horizontalMoveCycle = 0
+            
             switch (this.direction) {
                 case DIRECTIONS.UP: // up
                     this.y -= BLOCK_SIZE

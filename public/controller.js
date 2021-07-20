@@ -272,7 +272,10 @@ function draw() {
 		pacmans.forEach(function (pacman) {
 			const id = pacman.id
 			checkPlayerScreen(id)
-			if (allowGameStart) pacman.updatePosition(players[id].direction, screenNumber, nScreens, players[id])
+			if (allowGameStart) {
+				pacman.updateDirection(players[id].direction, screenNumber, nScreens, players[id])
+				pacman.updatePosition()
+			}
 			else pacman.updateFixedPosition(screenNumber, nScreens, players[id])
 			const pacmanPos = pacman.getRowCol()
 			for (const ghost of ghosts) {
