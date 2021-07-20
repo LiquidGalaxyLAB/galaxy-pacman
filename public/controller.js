@@ -20,6 +20,7 @@ import Pacman from "./models/Pacman.js"
 import Food from "./models/Food.js"
 import PowerPill from "./models/PowerPill.js";
 import Ghost from "./models/Ghost.js";
+import GhostLairDoor from "./models/GhostLairDoor.js";
 import Stats from "./js/stats.module.js";
 import AudioController from './AudioController.js'
 const ghostsColors = ["#FF0000", "#FFB8FF", "#FFB852", "#00FFFF"]
@@ -36,7 +37,7 @@ if (SHOW_STATUS) container.appendChild(stats.dom);
 // Variables
 let screenNumber, nScreens, allFoodsEaten = {};
 let currentMap = MASTER_MAP_LAYOUT //default to master map
-var player = {};
+var players = {}; // object containing players information. the object key is the id of the players constroller socket
 var centerText = document.getElementById('center-text')
 var allowGameStart = false
 var gameOver = false
@@ -45,6 +46,10 @@ var availableFoods = 0
 // Socket listeners and functions
 var socket = io()
 
+/**
+ * Screen setup method -> responsible for setting variables for screen
+ * @param {Object} screen screen object containing info like screen number and total of screens
+ */
 function screenSetup(screen) {
 	screenNumber = screen.number;
 	nScreens = screen.nScreens;
@@ -70,13 +75,42 @@ function screenSetup(screen) {
 socket.on("new-screen", screenSetup)
 
 /**
- * On Player Connected method -> responsible for setting player object to basic player
- * @param {Object} pl new player object from server containing initial information for player
+ * Update Players Object method -> responsible for adding or removing players from players object
+ * @param {Object} pls players object with all currently connected players from server
  */
-function onPlayerConnected(pl) {
-	player = pl;
+function onUpdatePlayersObj(pls) {
+	var playersFound = {};
+	for (var id in pls) {
+		// if player not added yet -> create
+		if (!Object.keys(players).includes(id)) {
+			players[id] = pls[id]
+			createPacman(players[id])
+		}
+		playersFound[id] = true;
+	};
+
+
+	for (var id in players) {
+		// if one of the players is no longer connected (not in the players object) delete from object and pacmans array
+		if (!Object.keys(playersFound).includes(id)) {
+			let index = pacmans.findIndex(pacman => pacman.id == id)
+			pacmans.splice(index, 1)
+			delete players[id];
+		}
+	}
 }
-socket.on('new-player', onPlayerConnected)
+socket.on('update-players-object', onUpdatePlayersObj)
+
+/**
+ * On Create Pacman method -> responsible for creating pacman on other screens
+ * @param {Object} pacman object with all information needed to create the pacman
+ */
+function onCreatePacman(pacman) {
+	if (screenNumber !== pacman.screen) {
+		pacmans.push(new Pacman(pacman.x, pacman.y, pacman.color, pacman.id))
+	}
+}
+socket.on('create-pacman', onCreatePacman)
 
 /**
  * On Game Start method -> responsible for allowing game start
@@ -109,7 +143,7 @@ socket.on('play-audio', playAudio)
  * Stop Audio method -> responsible for stopping audio based on name
  * @param {String} name name of the audio to be stopped
  */
- function stopAudio(name) {
+function stopAudio(name) {
 	if (screenNumber == 1) {
 		AudioController.stop(name)
 	}
@@ -128,70 +162,31 @@ function playUniqueAudio(name) {
 socket.on('play-unique-audio', playUniqueAudio)
 
 /**
- * Switch siren method -> responsible for switching sirens when powerup is picked up/runs out
+ * Update player info method -> responsible for updating players object with new players info
+ * @param {Object} pls players object containing new players info
  */
-function switchSiren() {
-	if (screenNumber == 1) {
-		AudioController.switchSiren()
+function updatePlayersInfo(pls) {
+	for (var id in pls) {
+		players[id] = pls[id]
 	}
 }
-socket.on('switch-siren', switchSiren)
-
-// Direction from controller
-let currentDirection = DIRECTIONS.STOP // init standing still
-
-/**
- * Update direction method -> responsible for changing current direction to new direction
- * @param {String} dir indicates the new direction
- */
-function updateDirection(dir) {
-	if (allowGameStart) {
-		currentDirection = dir
-		if (dir !== DIRECTIONS.STOP) {
-			player.hasMoved = true;
-			socket.emit('update-player-info', player)
-		}
-	}
-}
-socket.on('updateDirection', updateDirection)
-
-/**
- * Update player position method -> responsible for updating player position
- * @param {Object} pl player object containing player info with new position
- */
-function updatePlayerPos(pl) {
-	if (screenNumber != 1) {
-		player = pl
-	}
-}
-socket.on('update-player-pos', updatePlayerPos)
-
-/**
- * Update player info method -> responsible for updating player info
- * @param {Object} pl player object containing new player info to update
- */
-function updatePlayerInfo(pl) {
-	player.screen = pl.screen
-	player.currentMap = pl.currentMap
-	player.score = pl.score
-	player.isPoweredUp = pl.isPoweredUp
-	player.hasMoved = pl.hasMoved
-}
-socket.on('update-player-info', updatePlayerInfo)
+socket.on('update-players-info', updatePlayersInfo)
 
 /**
  * Reset Player method -> responsible for resetting player on death and defining if game is over
  * @param {Object} pl player object with reset stats and new amount of lives
  */
-function resetPlayer(pl) {
-	console.log('reset', pl)
-	currentDirection = DIRECTIONS.STOP
-	player = pl
-	gameOver = isGameOver(pl)
-	// TODO: change to player id later (currently player is always index 0)
-	pacmans[0].reset()
+function onPlayerDeath(pl) {
+	const id = pl.id
+
+	// TODO: Add game over
+	// gameOver = isGameOver(pl)
+
+	pacmans.forEach(pacman => {
+		if (pacman.id == id) pacman.reset()
+	})
 }
-socket.on('player-death', resetPlayer)
+socket.on('player-death', onPlayerDeath)
 
 /**
  * Set foods eaten method -> set all foods eaten for specific screen
@@ -199,7 +194,7 @@ socket.on('player-death', resetPlayer)
  */
 function setFoodsEaten(screen) {
 	allFoodsEaten[screen] = true
-	gameOver = isGameOver(player) //check if game over
+	// gameOver = isGameOver(player) //check if game over
 }
 socket.on('set-foods-eaten', setFoodsEaten)
 
@@ -209,16 +204,20 @@ socket.on('set-foods-eaten', setFoodsEaten)
  */
 function onSetPowerup(payload) {
 	if (payload.value == false) {
-		player.isPoweredUp = false;
-		socket.emit('update-player-info', player)
+		const id = payload.playerId
+		players[id].isPoweredUp = false;
+		socket.emit('update-players-info', players[id])
 	}
 }
 socket.on('set-powerup', onSetPowerup)
 
-function onGameRestart(pl) {
+/**
+ * On Game Restart method -> responsible for restarting all variables and recreating grid
+ */
+function onGameRestart() {
+	AudioController.stopAll()
 	//restart variables
-	currentDirection = DIRECTIONS.STOP
-	player = pl
+	players = {}
 	blocks = []
 	pacmans = []
 	ghosts = []
@@ -271,97 +270,104 @@ function draw() {
 	if (!gameOver) {
 		//draw each pacman
 		pacmans.forEach(function (pacman) {
-			if (pacman.isPlayerOnScreen()) {
-				player.screen = screenNumber;
-				player.currentMap = screenNumber == 1 ? 'master' : 'slave'
-				socket.emit('update-player-info', player)
+			const id = pacman.id
+			checkPlayerScreen(id)
+			if (allowGameStart) {
+				pacman.updateDirection(players[id].direction, screenNumber, nScreens, players[id])
+				pacman.updatePosition()
 			}
-
-			if (allowGameStart || screenNumber !== 1) pacman.updatePosition(currentDirection, screenNumber, nScreens, player)
+			else pacman.updateFixedPosition(screenNumber, nScreens, players[id])
 			const pacmanPos = pacman.getRowCol()
 			for (const ghost of ghosts) {
 				const ghostPos = ghost.getRowCol()
 
 				// only collide if position is same and player has moved
-				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && player.hasMoved) {
+				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && players[id].hasMoved) {
 					if (!pacman.isPoweredUp) {
-						currentDirection = DIRECTIONS.STOP
-						pacman.reset()
-						player.x = pacman.x
-						player.y = pacman.y
-						player.screen = 1
-						player.currentMap = 'master'
-						player.hasMoved = false
-						socket.emit('player-death', player)
-						socket.emit('play-unique-audio', 'death')
+						players[id].direction = DIRECTIONS.STOP
+						players[id].x = players[id].startX
+						players[id].y = players[id].startY
+						players[id].hasMoved = false
+						socket.emit('update-players-info', players[id])
+						socket.emit('player-death', players[id])
+						socket.emit('play-audio', 'death')
 					} else {
 						ghost.reset()
-						player.score += GHOSTEAT_SCORE_VALUE
-						socket.emit('update-player-info', player)
+						players[id].score += GHOSTEAT_SCORE_VALUE
+						socket.emit('update-players-info', players[id])
 						socket.emit('play-audio', 'eatGhost')
 					}
 				}
 			}
 
 			// food/powerpill eating logic
-			if (player.currentMap == "master" && screenNumber == 1) {
+			if (players[id].currentMap == "master" && screenNumber == 1) {
 				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-					player.score += FOOD_SCORE_VALUE
+					players[id].score += FOOD_SCORE_VALUE
 					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
 					availableFoods--
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
 					socket.emit('play-audio', 'munch')
-					socket.emit('update-player-info', player)
+					socket.emit('update-players-info', players[id])
 				} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-					player.score += POWERPILL_SCORE_VALUE
-					player.isPoweredUp = true
+					players[id].score += POWERPILL_SCORE_VALUE
+					players[id].isPoweredUp = true
 					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
 					availableFoods--
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
 					socket.emit('play-audio', 'munch')
-					socket.emit('update-player-info', player)
-					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true})
+					socket.emit('update-players-info', players[id])
+					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: id })
 				}
-			} else if (player.currentMap == "slave" && screenNumber !== 1) {
-				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-					player.score += FOOD_SCORE_VALUE
-					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
+			} else if (players[id].currentMap == "slave" && screenNumber !== 1 && players[id].screen == screenNumber) {
+				const playerPos = players[id].pos
+				//relative col calculation
+				let isRightScreen = players[id].screen <= (Math.ceil(nScreens / 2));
+				let offsetIndex = isRightScreen ? players[id].screen - 1 : ((nScreens + 1) - players[id].screen) * -1;
+				let realtiveCol = playerPos.col - (offsetIndex * GRID_WIDTH)
+
+				if (currentMap[playerPos.row][realtiveCol] == ENTITIES.FOOD && !blocks[playerPos.row][realtiveCol]?.wasEaten) {
+					players[id].score += FOOD_SCORE_VALUE
+					blocks[playerPos.row][realtiveCol].wasEaten = true; // set food to eaten
 					availableFoods--
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
 					socket.emit('play-audio', 'munch')
-					socket.emit('update-player-info', player)
-				} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-					player.score += POWERPILL_SCORE_VALUE
-					player.isPoweredUp = true
-					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
+					socket.emit('update-players-info', players[id])
+				} else if (currentMap[playerPos.row][realtiveCol] == ENTITIES.POWERPILL && !blocks[playerPos.row][realtiveCol]?.wasEaten) {
+					players[id].score += POWERPILL_SCORE_VALUE
+					players[id].isPoweredUp = true
+					blocks[playerPos.row][realtiveCol].wasEaten = true; // set pill to eaten
 					availableFoods--
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
 					socket.emit('play-audio', 'munch')
-					socket.emit('update-player-info', player)
-					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true})
+					socket.emit('update-players-info', players[id])
+					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: id })
 				}
 			}
 
 			// emit player position to all screens
 			if (screenNumber == 1) {
-				player.x = pacman.x
-				player.y = pacman.y
-				socket.emit('update-player-pos', player)
+				players[id].x = pacman.x
+				players[id].y = pacman.y
+				players[id].pos = pacman.getRowCol()
+				socket.emit('update-players-info', players[id])
 			}
 			pacman.draw(ctx);
 		});
 
 		//draw ghosts
 		ghosts.forEach(function (ghost) {
-			if (allowGameStart) ghost.updatePosition(currentDirection, currentMap)
+			const keys = Object.keys(players)
+			// mirror first players movemnt
+			if (allowGameStart && keys.length) ghost.updatePosition(players[keys[0]].direction, currentMap)
 			ghost.draw(ctx)
 		})
 	}
@@ -393,23 +399,12 @@ function createGrid(map) {
 					availableFoods++
 					blocks[i].push(new Food(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
-				case ENTITIES.PACMAN: // Pacman
-					player.x = j * BLOCK_SIZE
-					player.y = i * BLOCK_SIZE
-					let food = new Food(j * BLOCK_SIZE, i * BLOCK_SIZE)
-					food.wasEaten = true
-					blocks[i].push(food)
-					pacmans.push(new Pacman(j * BLOCK_SIZE, i * BLOCK_SIZE, "#FFFF00"));
-					break;
 				case ENTITIES.POWERPILL: // PowerPill
 					availableFoods++
 					blocks[i].push(new PowerPill(j * BLOCK_SIZE, i * BLOCK_SIZE));
 					break;
-				case ENTITIES.GHOST: // Ghost
-					for (const color of ghostsColors) {
-						ghosts.push(new Ghost(j * BLOCK_SIZE, i * BLOCK_SIZE, color));
-					}
-					blocks[i].push(null);
+				case ENTITIES.GHOSTLAIR_DOOR:
+					blocks[i].push(new GhostLairDoor(j * BLOCK_SIZE, i * BLOCK_SIZE))
 					break;
 				default:
 					blocks[i].push(null);
@@ -417,6 +412,85 @@ function createGrid(map) {
 			}
 		})
 	});
+
+	createGhosts()
+}
+
+// Create Pacman method -> Get a random position for pacman spawn point and create pacman object in pacmans array
+function createPacman(player) {
+	const playerMap = player.currentMap == 'master' ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
+
+	const availablePositions = []
+	playerMap.forEach((row, i) => {
+		row.forEach((block, j) => {
+			if (block == ENTITIES.FOOD) availablePositions.push({ i, j })
+		})
+	})
+
+	const randomIndex = Math.floor(Math.random() * availablePositions.length)
+
+	if (screenNumber == player.screen) {
+		//set food to eaten
+		blocks[availablePositions[randomIndex].i][availablePositions[randomIndex].j].wasEaten = true
+		availableFoods--;
+
+		//create pacman
+
+		// get random coordinates
+		const x = availablePositions[randomIndex].j * BLOCK_SIZE
+		const y = availablePositions[randomIndex].i * BLOCK_SIZE
+
+		// adapt based on screen
+		let isRightScreen = player.screen <= (Math.ceil(nScreens / 2));
+		let offsetIndex = isRightScreen ? player.screen - 1 : ((nScreens + 1) - player.screen) * -1;
+		let relativeX = x + (window.innerWidth * offsetIndex)
+		const masterPacman = new Pacman(x, y, player.color, null) // pacman with original coordinates (used for getting row and col)
+
+		// create pacman
+		const newPacman = new Pacman(relativeX, y, player.color, player.id) // pacman with relative coordinates
+		pacmans.push(newPacman)
+		player.x = relativeX
+		player.y = y
+		player.startX = relativeX
+		player.startY = y
+		player.pos = masterPacman.getRowCol()
+		socket.emit('update-players-info', player)
+
+		const pacmanAux = {
+			x: relativeX, y, color: player.color, id: player.id, screen: screenNumber,
+		}
+		socket.emit('create-pacman', pacmanAux)
+	}
+	console.log('pamcans', pacmans)
+}
+
+// Create Ghosts method -> Get a random position for ghosts spawn point and create ghosts objects in ghosts array
+function createGhosts() {
+	const amountOfGhosts = Math.floor(Math.random() * 4) + 1 // random number from 1 to 4
+
+	let availableColors = Array.from(ghostsColors);
+
+	const availablePositions = []
+	currentMap.forEach((row, i) => {
+		row.forEach((block, j) => {
+			if (block == ENTITIES.GHOSTLAIR) availablePositions.push({ i, j })
+		})
+	})
+
+	for (let i = 0; i < amountOfGhosts; i++) {
+		//get color
+		let randomIndex = Math.floor(Math.random() * availableColors.length)
+		let color = availableColors[randomIndex]
+		availableColors.splice(randomIndex, 1)
+
+		//get position
+		randomIndex = Math.floor(Math.random() * availablePositions.length)
+
+		//create ghost
+		const x = availablePositions[randomIndex].j * BLOCK_SIZE
+		const y = availablePositions[randomIndex].i * BLOCK_SIZE
+		ghosts.push(new Ghost(x, y, color));
+	}
 }
 
 /**
@@ -447,4 +521,21 @@ function isGameOver(player) {
 	}
 
 	return false
+}
+
+function checkPlayerScreen(playerId) {
+	let width = window.innerWidth
+	let x = players[playerId].x
+	let screen
+
+	if (x >= 0) {
+		screen = Math.floor(x / width) + 1
+	} else {
+		screen = nScreens - Math.floor(-x / width)
+	}
+
+	players[playerId].screen = screen
+	players[playerId].currentMap = screen == 1 ? 'master' : 'slave'
+
+	socket.emit('update-players-info', players[playerId])
 }

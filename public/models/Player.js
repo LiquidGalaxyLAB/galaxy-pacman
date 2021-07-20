@@ -6,7 +6,8 @@ import { BLOCK_SIZE, PLAYER_SPEED_DIVIDER, DIRECTIONS, ENTITIES } from "../const
  * @param {number} y indicates object y position
  */
 class Player {
-    constructor(x, y, color) {
+    constructor(x, y, color, id) {
+        this.id = id
         this.startX = x;
         this.startY = y;
         this.x = x;
@@ -49,11 +50,17 @@ class Player {
     /**
      * Reset method -> resets player position, direction and facing direction
      */
-    reset() {
+    reset(player) {
         this.direction = DIRECTIONS.STOP
         this.facing = DIRECTIONS.RIGHT
-        this.x = this.startX;
-        this.y = this.startY;
+        if (player) {
+            this.x = player.startX
+            this.y = player.startY
+        } else {
+            this.x = this.startX
+            this.y = this.startY
+        }
+
     }
 }
 

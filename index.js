@@ -21,17 +21,7 @@ if (myArgs.length == 0 || isNaN(nScreens)) {
 }
 console.log(`Running Galalxy Pacman for Liquid Galaxy with ${nScreens} screens!`);
 var screens = [];
-var newPlayer = {
-    x: 0,
-    y: 0,
-    score: 0,
-    screen: 1,
-    currentMap: "master",
-    isPoweredUp: false,
-    isConnected: false,
-    lives: 5, // TODO: find out how to use const here
-    hasMoved: false,
-}
+var players = {};
 var powerUpTimeout
 
 
@@ -51,44 +41,73 @@ app.get('/:id', (req, res) => {
 
 // Socket listeners and functions
 io.on('connect', socket => {
-    socket.emit('new-player', newPlayer)
     console.log(`User connected with id ${socket.id}`)
     screens.push({ number: Number(screenNumber), id: socket.id });
     socket.emit("new-screen", { number: Number(screenNumber), nScreens: nScreens }) //tell to load screen on local and its number  
+
+    /**
+     * On New PLayer method -> responsible for updating players object and emitting to all sockets that a new player has connected
+     * @param {Object} newPl new player object containing initial player information
+     */
+    function onNewPlayer(newPl) {
+        players[socket.id] = newPl;
+        console.log('new ´playuer')
+
+        io.emit('update-players-object', players)
+        io.emit('new-player', players[socket.id])
+    }
+    socket.on('new-player', onNewPlayer)
+
+    /**
+     * On Create Pacman method -> responsible for emitting to all sockets that a pacman has been created
+     */
+    function onCreatePacman(pacman)  {
+        io.emit('create-pacman', pacman)
+    }
+    socket.on('create-pacman', onCreatePacman)
+    
+    /**
+     * On Disconnect method -> responsible for updating players object and emitting to all sockets that a player has disconnected
+     */
+    function onDisconnect() {
+        if(players[socket.id]) delete players[socket.id]
+        console.log('disconnect', players)
+
+        io.emit('update-players-object', players)
+    }
+    socket.on('disconnect', onDisconnect)
 
     /**
      * Update direction method -> responsible for emitting to all sockets to update direction
      * @param {String} dir indicates the new direction
      */
     function updateDirection(dir) {
-        io.emit('updateDirection', dir)
+        players[socket.id].direction = dir
+        players[socket.id].hasMoved = true
+        io.emit('update-players-info', players)
     }
-    socket.on('updateDirection', updateDirection)
-
-    /**
-     * Update player position method -> responsible for emitting to all sockets to update player position
-     * @param {Object} pl player object containing player info with new position
-     */
-    function updatePlayerPos(pl) {
-        io.emit('update-player-pos', pl)
-    }
-    socket.on('update-player-pos', updatePlayerPos)
+    socket.on('update-direction', updateDirection)
 
     /**
      * Update player info method -> responsible for emitting to all sockets to update player info
      * @param {Object} pl player object containing player info to update
      */
     function updatePlayerInfo(pl) {
-        io.emit('update-player-info', pl)
+        const id = pl.id
+        if(players[id]) {
+            players[id] = pl;
+        }
+        io.emit('update-players-info', players)
     }
-    socket.on('update-player-info', updatePlayerInfo)
+    socket.on('update-players-info', updatePlayerInfo)
 
     /**
      * Reset player method -> responsible for emitting to all sockets to reset player information and removing one life
      * @param {Object} player indicates reset player object
      */
     function resetPlayer(player) {
-        player.lives--
+        const id = player.id
+        players[id].lives--
         io.emit('player-death', player)
     }
     socket.on('player-death', resetPlayer)
@@ -117,9 +136,6 @@ io.on('connect', socket => {
     }
     socket.on('play-unique-audio', playUniqueAudio)
 
-    // emit to all sockets to change siren
-    socket.on('switch-siren', () => io.emit('switch-siren'))
-
     /**
      * Set foods eaten method -> emit to all sockets that foods have been eaten on a specific screen
      * @param {Number} screen number of the screen where all foods were eaten
@@ -140,7 +156,7 @@ io.on('connect', socket => {
 
     // On restart game method -> Emit to all sockets to restart game with new player
     function onRestartGame() {
-        io.emit('restart-game', newPlayer)
+        io.emit('restart-game')
     }
     socket.on('restart-game', onRestartGame)
 
@@ -148,7 +164,7 @@ io.on('connect', socket => {
      * Stop Audio method -> responsible for emitting specific audio to stop
      * @param {String} name name of the audio to be stopped
      */
-     function stopAudio(name) {
+    function stopAudio(name) {
         io.emit('stop-audio', name)
     }
     socket.on('stop-audio', stopAudio)
@@ -156,10 +172,10 @@ io.on('connect', socket => {
     /**
      * On powerup finish method -> responsible for switching siren sounds
      */
-    function onPowerUpFinish() {
+    function onPowerUpFinish(playerId) {
         io.emit('stop-audio', 'powerSiren')
         io.emit('play-audio', 'siren')
-        io.emit('set-powerup', { value: false })
+        io.emit('set-powerup', { value: false, playerId })
     }
 
     /**
@@ -168,10 +184,14 @@ io.on('connect', socket => {
      */
     function onSetPowerup(payload) {
         if (payload.value == true) {
+            if (powerUpTimeout) { 
+                // if already powered up
+                io.emit('stop-audio', 'powerSiren') //stop current sound before starting again
+                clearTimeout(powerUpTimeout)
+            }
             io.emit('stop-audio', 'siren')
             io.emit('play-audio', 'powerSiren')
-            if (powerUpTimeout) clearTimeout(powerUpTimeout)
-            powerUpTimeout = setTimeout(onPowerUpFinish, payload.duration)
+            powerUpTimeout = setTimeout(onPowerUpFinish, payload.duration, payload.playerId)
         }
     }
     socket.on('set-powerup', onSetPowerup)

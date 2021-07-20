@@ -1,9 +1,15 @@
 import { DIRECTIONS, PACMAN_LIVES } from "../consts.js"
 var socket = io()
+let nScreens; // variable will be set to have total number of screens in screenSetup method
 
 // dom variables
 const scoreText = document.getElementById('score-text')
 const centerText = document.getElementById('center-text')
+const colorPicker = document.getElementById('color-picker')
+const colorSubmitButton = document.getElementById('pick-color-btn')
+const colorPickerContainer = document.getElementById('color-picker-container')
+const controllerConatiner = document.getElementById('controller-container')
+
 // setup lives counter
 const livesContainer = document.getElementById('lives-container')
 const pacmanLifeSprite = document.createElement('img');
@@ -17,17 +23,65 @@ for (let i = 0; i < PACMAN_LIVES; i++) {
 
 // player variables
 var currentScore = 0
+var newPlayer = {
+    id: null,
+    x: 0,
+    y: 0,
+    startX: 0,
+    startY: 0,
+    score: 0,
+    direction: DIRECTIONS.STOP,
+    isPoweredUp: false,
+    isConnected: false,
+    lives: PACMAN_LIVES,
+    hasMoved: false,
+}
+/**
+ * On Color Submit method -> responsible for setting player color and calling onNewPlayer mehtod
+ */
+ function onColorSubmit() {
+    newPlayer.color = colorPicker.value
+    onNewPlayer()
+}
+colorSubmitButton.addEventListener('click', onColorSubmit)
 
-// socket listeners/functions
+/**
+ * On New Player method -> responsible for setting player object and emitting that a new player has connected
+ */
+function onNewPlayer() {
+    newPlayer.id = socket.id
+    console.log('nScrens', nScreens)
+    newPlayer.screen = Math.floor(Math.random() * nScreens) + 1 //random screen from 1 to number of screens
+    newPlayer.currentMap = newPlayer.screen == 1 ? 'master' : 'slave'
+    socket.emit('new-player', newPlayer)
+    console.log('new player', newPlayer)
+
+    //switch to controller
+    colorPickerContainer.style = 'visibility: hidden'
+    controllerConatiner.style = 'visibility: visible'
+}
+
+// socket functions/event listeners
+/**
+ * Screen setup method -> responsible for setting variables for screen
+ * @param {Object} screen screen object containing info like screen number and total of screens
+ */
+ function screenSetup(screen) {
+     console.log('screen', screen)
+	nScreens = screen.nScreens;
+}
+socket.on("new-screen", screenSetup)
+
 /**
  * Update player score method -> responsible for updating 'Current Score' text in controller
- * @param {Object} player player object containg all player info
+ * @param {Object} players players object containg all players info
  */
-function updatePlayerScore(player) {
-    currentScore = player.score
+function updatePlayerScore(players) {
+    const player = players[socket.id]
+    currentScore = player?.score || 0
     scoreText.innerHTML = `CURRENT SCORE: ${currentScore}`
 }
-socket.on('update-player-info', updatePlayerScore)
+socket.on('update-players-info', updatePlayerScore)
 
 /**
  * On PLayer Deathg method -> responsible for redrawing lives on bottom right based on player current lives
@@ -52,7 +106,7 @@ function onGameEnd(victory) {
         centerText.innerHTML = `YOU LOSE!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
     }
     const insertbutton = document.createElement('button')
-    insertbutton.className = 'insert-button'
+    insertbutton.className = 'custom-button'
     insertbutton.innerHTML = 'INSERT'
     centerText.appendChild(insertbutton)
 
@@ -75,34 +129,30 @@ var manager = nipplejs.create(controllerOptions)
 
 // Controller direction angle
 let controllerDir = DIRECTIONS.STOP;
-// player direction angle
-let playerDir = DIRECTIONS.STOP;
+
 // Controller movement listener
 manager.on('move', function (ev, nipple) {
     // Save controller direction
     if (nipple.direction) controllerDir = nipple.direction.angle
 
     // If player direction is not same as controller emit for socket to update player direction
-    if (playerDir !== controllerDir) {
-        playerDir = controllerDir
 
-        // this switch is needed in case the directions constants are ever changed
-        let dir;
-        switch (controllerDir) {
-            case "up":
-                dir = DIRECTIONS.UP
-                break;
-            case "down":
-                dir = DIRECTIONS.DOWN
-                break;
-            case "right":
-                dir = DIRECTIONS.RIGHT
-                break;
-            case "left":
-                dir = DIRECTIONS.LEFT
-                break;
-        }
-
-        socket.emit('updateDirection', dir)
+    // this switch is needed in case the directions constants are ever changed
+    let dir;
+    switch (controllerDir) {
+        case "up":
+            dir = DIRECTIONS.UP
+            break;
+        case "down":
+            dir = DIRECTIONS.DOWN
+            break;
+        case "right":
+            dir = DIRECTIONS.RIGHT
+            break;
+        case "left":
+            dir = DIRECTIONS.LEFT
+            break;
     }
+
+    socket.emit('update-direction', dir)
 })

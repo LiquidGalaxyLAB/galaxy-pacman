@@ -7,10 +7,12 @@ import Player from "./Player.js"
  * @param {number} y indicates object y position
  */
 class Pacman extends Player {
-    constructor(x, y, color) {
-        super(x, y, color)
+    constructor(x, y, color, id) {
+        super(x, y, color, id)
 
         this.isPoweredUp = false
+        this.verticalMoveCycle = 0
+        this.horizontalMoveCycle = 0
         // variables used for pacman mouth animation
         this.mouthOpenValue = 40
         this.mouthPosition = -1
@@ -33,7 +35,7 @@ class Pacman extends Player {
         ctx.setTransform(1, 0, 0, 1, 0, 0); //reset transform before drawing
 
         // set canvas to pacman center and rotate based on currently faced direction
-        ctx.translate(this.x + radius, this.y + radius)
+        ctx.translate(this.x + radius + this.horizontalMoveCycle, this.y + radius + this.verticalMoveCycle)
         switch (this.facing) {
             case DIRECTIONS.RIGHT:
                 ctx.rotate(0 * Math.PI / 180);
@@ -50,24 +52,24 @@ class Pacman extends Player {
         }
 
         // set canvas back to correct coordinates before drawing
-        ctx.translate(-this.x - radius, -this.y - radius)
+        ctx.translate(-this.x - radius - this.horizontalMoveCycle, -this.y - radius - this.verticalMoveCycle)
 
         ctx.beginPath();
-        ctx.arc(this.x + radius, this.y + radius, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
+        ctx.arc(this.x + radius + this.horizontalMoveCycle, this.y + radius + this.verticalMoveCycle, radius, (Math.PI / 180) * this.mouthOpenValue, (Math.PI / 180) * (360 - this.mouthOpenValue));
 
-        ctx.lineTo(this.x + radius, this.y + radius);
+        ctx.lineTo(this.x + radius + this.horizontalMoveCycle, this.y + radius + this.verticalMoveCycle);
         ctx.fillStyle = this.isPoweredUp ? 'white' : this.color;
         ctx.fill();
     }
 
     /**
-     * Update position method -> update player position based on current direction and player speed
+     * Update direction method -> update player direction based on current direction input
      * @param {String} newDir new direction from player input
      * @param {Number} screen current screen number
      * @param {Number} nScreens total number of screens
      * @param {Object} player object containing player info like position, screen, current map
      */
-    updatePosition(newDir, screen, nScreens, player) {
+    updateDirection(newDir, screen, nScreens, player) {
         this.isPoweredUp = player.isPoweredUp
         this.y = player.y
         let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
@@ -76,19 +78,15 @@ class Pacman extends Player {
 
         switch (this.direction) {
             case DIRECTIONS.UP: // up
-                this.y -= this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.DOWN: // down
-                this.y += this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.LEFT: // left
-                this.x -= this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.RIGHT: // right
-                this.x += this.speed
                 this.moveInterval++
                 break;
         }
@@ -96,19 +94,14 @@ class Pacman extends Player {
         // If player is able to change direction or player is stopped
         if ((this.moveInterval == PLAYER_SPEED_DIVIDER || this.direction == DIRECTIONS.STOP)) {
             this.moveInterval = 0 // reset move interval
-
             // Get player row and col
             const row = Math.round(this.y / BLOCK_SIZE)
-            
             // Calculate relative x -> player x relative to current screen
             isRightScreen = player.screen <= (Math.ceil(nScreens / 2));
             offsetIndex = isRightScreen ? player.screen - 1 : ((nScreens + 1) - player.screen) * -1;
             let relativeX = Math.abs(player.x - (window.innerWidth * offsetIndex))
 
-            let col
-            // if screen is master consider player offset based on screen
-            if(screen == 1) col = Math.round(relativeX / BLOCK_SIZE)
-            else col = Math.round(this.x / BLOCK_SIZE)
+            let col = Math.round(relativeX / BLOCK_SIZE)
 
             // Set map layout according to screen
             const maps = {
@@ -126,28 +119,82 @@ class Pacman extends Player {
             const left = map[row][col - 1]
 
             // Only allow direction change if next block is not wall
-            if (newDir == DIRECTIONS.UP && above !== ENTITIES.WALL) {
+            if (newDir == DIRECTIONS.UP && above !== ENTITIES.WALL && above !== ENTITIES.GHOSTLAIR_DOOR) {
                 this.direction = DIRECTIONS.UP;
                 this.facing = DIRECTIONS.UP
-            } else if (newDir == DIRECTIONS.DOWN && below !== ENTITIES.WALL) {
+            } else if (newDir == DIRECTIONS.DOWN && below !== ENTITIES.WALL && below !== ENTITIES.GHOSTLAIR_DOOR) {
                 this.direction = DIRECTIONS.DOWN;
                 this.facing = DIRECTIONS.DOWN
-            } else if (newDir == DIRECTIONS.LEFT && left !== ENTITIES.WALL) {
+            } else if (newDir == DIRECTIONS.LEFT && left !== ENTITIES.WALL && left !== ENTITIES.GHOSTLAIR_DOOR) {
                 this.direction = DIRECTIONS.LEFT
                 this.facing = DIRECTIONS.LEFT
-            } else if (newDir == DIRECTIONS.RIGHT && right !== ENTITIES.WALL) {
+            } else if (newDir == DIRECTIONS.RIGHT && right !== ENTITIES.WALL && right !== ENTITIES.GHOSTLAIR_DOOR) {
                 this.direction = DIRECTIONS.RIGHT
                 this.facing = DIRECTIONS.RIGHT
             } else if (
-                (this.direction == DIRECTIONS.UP && above == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.DOWN && below == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.LEFT && left == ENTITIES.WALL) ||
-                (this.direction == DIRECTIONS.RIGHT && right == ENTITIES.WALL)
+                (this.direction == DIRECTIONS.UP && (above == ENTITIES.WALL || above == ENTITIES.GHOSTLAIR_DOOR)) ||
+                (this.direction == DIRECTIONS.DOWN && (below == ENTITIES.WALL || below == ENTITIES.GHOSTLAIR_DOOR)) ||
+                (this.direction == DIRECTIONS.LEFT && (left == ENTITIES.WALL || left == ENTITIES.GHOSTLAIR_DOOR)) ||
+                (this.direction == DIRECTIONS.RIGHT && (right == ENTITIES.WALL || right == ENTITIES.GHOSTLAIR_DOOR))
             ) {
                 // If next block is wall stop player movement
                 this.direction = DIRECTIONS.STOP // stop
             }
         }
+    }
+
+    /**
+     * Update positionm method -> update player move cycle for animation and after animation is complete update position based on direction
+     */
+    updatePosition() {
+        switch (this.direction) {
+            case DIRECTIONS.UP: // up
+                this.verticalMoveCycle -= this.speed
+                break;
+            case DIRECTIONS.DOWN: // down
+                this.verticalMoveCycle += this.speed
+                break;
+            case DIRECTIONS.LEFT: // left
+                this.horizontalMoveCycle -= this.speed
+                break;
+            case DIRECTIONS.RIGHT: // right
+                this.horizontalMoveCycle += this.speed
+                break;
+        }
+
+        if ((this.moveInterval == PLAYER_SPEED_DIVIDER - 1 || this.direction == DIRECTIONS.STOP)) {
+            this.verticalMoveCycle = 0
+            this.horizontalMoveCycle = 0
+            
+            switch (this.direction) {
+                case DIRECTIONS.UP: // up
+                    this.y -= BLOCK_SIZE
+                    break;
+                case DIRECTIONS.DOWN: // down
+                    this.y += BLOCK_SIZE
+                    break;
+                case DIRECTIONS.LEFT: // left
+                    this.x -= BLOCK_SIZE
+                    break;
+                case DIRECTIONS.RIGHT: // right
+                    this.x += BLOCK_SIZE
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Update fixed position method -> responsible for updating position with relative x based on screen but not allowing position change
+     * @param {Number} screen current screen number
+     * @param {Number} nScreens total number of screens
+     * @param {Object} player object containing player info like position, screen, current map
+     */
+    updateFixedPosition(screen, nScreens, player) {
+        this.isPoweredUp = player.isPoweredUp
+        this.y = player.y
+        let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+        let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+        this.x = player.x - (window.innerWidth * offsetIndex)
     }
 }
 
