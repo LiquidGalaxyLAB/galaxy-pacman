@@ -194,7 +194,7 @@ socket.on('player-death', onPlayerDeath)
  */
 function setFoodsEaten(screen) {
 	allFoodsEaten[screen] = true
-	// gameOver = isGameOver(player) //check if game over
+	gameOver = isGameOver() //check if game over
 }
 socket.on('set-foods-eaten', setFoodsEaten)
 
@@ -497,16 +497,16 @@ function createGhosts() {
  * Is Game Over method -> Check if game is over
  * @param {Object} player player object containing amount of lives and other info
  */
-function isGameOver(player) {
+function isGameOver() {
 	// check player lives
-	if (player.lives <= 0) {
-		AudioController.stop('siren')
-		AudioController.stop('powerSiren')
-		centerText.innerHTML = "GAME OVER"
-		centerText.style = "display: block"
-		socket.emit('game-end', false) //set victory as false
-		return true
-	}
+	// if (player.lives <= 0) {
+	// 	AudioController.stop('siren')
+	// 	AudioController.stop('powerSiren')
+	// 	centerText.innerHTML = "GAME OVER"
+	// 	centerText.style = "display: block"
+	// 	socket.emit('game-end', false) //set victory as false
+	// 	return true
+	// }
 
 	// check if all foods were eaten
 	const foodsEaten = Object.values(allFoodsEaten)
