@@ -63,13 +63,13 @@ class Pacman extends Player {
     }
 
     /**
-     * Update direction method -> update player direction based on current direction input
+     * Update position method -> update player position based on current direction input
      * @param {String} newDir new direction from player input
      * @param {Number} screen current screen number
      * @param {Number} nScreens total number of screens
      * @param {Object} player object containing player info like position, screen, current map
      */
-    updateDirection(newDir, screen, nScreens, player) {
+     updatePosition(newDir, screen, nScreens, player) {
         this.isPoweredUp = player.isPoweredUp
         this.y = player.y
         let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
@@ -140,32 +140,7 @@ class Pacman extends Player {
                 // If next block is wall stop player movement
                 this.direction = DIRECTIONS.STOP // stop
             }
-        }
-    }
 
-    /**
-     * Update positionm method -> update player move cycle for animation and after animation is complete update position based on direction
-     */
-    updatePosition() {
-        switch (this.direction) {
-            case DIRECTIONS.UP: // up
-                this.verticalMoveCycle -= this.speed
-                break;
-            case DIRECTIONS.DOWN: // down
-                this.verticalMoveCycle += this.speed
-                break;
-            case DIRECTIONS.LEFT: // left
-                this.horizontalMoveCycle -= this.speed
-                break;
-            case DIRECTIONS.RIGHT: // right
-                this.horizontalMoveCycle += this.speed
-                break;
-        }
-
-        if ((this.moveInterval == PLAYER_SPEED_DIVIDER - 1 || this.direction == DIRECTIONS.STOP)) {
-            this.verticalMoveCycle = 0
-            this.horizontalMoveCycle = 0
-            
             switch (this.direction) {
                 case DIRECTIONS.UP: // up
                     this.y -= BLOCK_SIZE
@@ -182,6 +157,46 @@ class Pacman extends Player {
             }
         }
     }
+
+    /**
+     * Update positionm method -> update player move cycle for animation and after animation is complete update position based on direction
+     */
+    // updatePosition() {
+    //     switch (this.direction) {
+    //         case DIRECTIONS.UP: // up
+    //             this.verticalMoveCycle -= this.speed
+    //             break;
+    //         case DIRECTIONS.DOWN: // down
+    //             this.verticalMoveCycle += this.speed
+    //             break;
+    //         case DIRECTIONS.LEFT: // left
+    //             this.horizontalMoveCycle -= this.speed
+    //             break;
+    //         case DIRECTIONS.RIGHT: // right
+    //             this.horizontalMoveCycle += this.speed
+    //             break;
+    //     }
+
+    //     if ((this.moveInterval == PLAYER_SPEED_DIVIDER - 1 || this.direction == DIRECTIONS.STOP)) {
+    //         this.verticalMoveCycle = 0
+    //         this.horizontalMoveCycle = 0
+            
+    //         switch (this.direction) {
+    //             case DIRECTIONS.UP: // up
+    //                 this.y -= BLOCK_SIZE
+    //                 break;
+    //             case DIRECTIONS.DOWN: // down
+    //                 this.y += BLOCK_SIZE
+    //                 break;
+    //             case DIRECTIONS.LEFT: // left
+    //                 this.x -= BLOCK_SIZE
+    //                 break;
+    //             case DIRECTIONS.RIGHT: // right
+    //                 this.x += BLOCK_SIZE
+    //                 break;
+    //         }
+    //     }
+    // }
 
     /**
      * Update fixed position method -> responsible for updating position with relative x based on screen but not allowing position change

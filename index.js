@@ -61,16 +61,16 @@ io.on('connect', socket => {
     /**
      * On Create Pacman method -> responsible for emitting to all sockets that a pacman has been created
      */
-    function onCreatePacman(pacman)  {
+    function onCreatePacman(pacman) {
         io.emit('create-pacman', pacman)
     }
     socket.on('create-pacman', onCreatePacman)
-    
+
     /**
      * On Disconnect method -> responsible for updating players object and emitting to all sockets that a player has disconnected
      */
     function onDisconnect() {
-        if(players[socket.id]) delete players[socket.id]
+        if (players[socket.id]) delete players[socket.id]
         console.log('disconnect', players)
 
         io.emit('update-players-object', players)
@@ -82,9 +82,11 @@ io.on('connect', socket => {
      * @param {String} dir indicates the new direction
      */
     function updateDirection(dir) {
-        players[socket.id].direction = dir
-        players[socket.id].hasMoved = true
-        io.emit('update-players-info', players)
+        if (players[socket.id]) {
+            players[socket.id].direction = dir
+            players[socket.id].hasMoved = true
+            io.emit('update-players-info', players)
+        }
     }
     socket.on('update-direction', updateDirection)
 
@@ -94,7 +96,7 @@ io.on('connect', socket => {
      */
     function updatePlayerInfo(pl) {
         const id = pl.id
-        if(players[id]) {
+        if (players[id]) {
             players[id] = pl;
         }
         io.emit('update-players-info', players)
@@ -184,7 +186,7 @@ io.on('connect', socket => {
      */
     function onSetPowerup(payload) {
         if (payload.value == true) {
-            if (powerUpTimeout) { 
+            if (powerUpTimeout) {
                 // if already powered up
                 io.emit('stop-audio', 'powerSiren') //stop current sound before starting again
                 clearTimeout(powerUpTimeout)
