@@ -110,7 +110,13 @@ io.on('connect', socket => {
     function resetPlayer(player) {
         const id = player.id
         players[id].lives--
+        players[id].direction = player.direction
+        players[id].x = players[id].startX
+        players[id].y = players[id].startY
+        players[id].screen = players[id].startScreen
+        players[id].hasMoved = false
         io.emit('player-death', player)
+        io.emit('update-players-info', players)
     }
     socket.on('player-death', resetPlayer)
 

@@ -52,6 +52,7 @@ function onNewPlayer() {
     newPlayer.id = socket.id
     console.log('nScrens', nScreens)
     newPlayer.screen = Math.floor(Math.random() * nScreens) + 1 //random screen from 1 to number of screens
+    newPlayer.startScreen = newPlayer.screen
     newPlayer.currentMap = newPlayer.screen == 1 ? 'master' : 'slave'
     socket.emit('new-player', newPlayer)
     console.log('new player', newPlayer)

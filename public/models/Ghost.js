@@ -91,19 +91,15 @@ class Ghost extends Player {
         this.relativeX = null
         switch (this.direction) {
             case DIRECTIONS.UP: // up
-                this.y -= this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.DOWN: // down
-                this.y += this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.LEFT: // left
-                this.x -= this.speed
                 this.moveInterval++
                 break;
             case DIRECTIONS.RIGHT: // right
-                this.x += this.speed
                 this.moveInterval++
                 break;
         }
@@ -144,6 +140,21 @@ class Ghost extends Player {
                 // If next block is wall get new random direction for ghost
                 this.direction = this.getRandomDirection({ above, below, right, left }) // stop
                 this.facing = this.direction
+            }
+
+            switch (this.direction) {
+                case DIRECTIONS.UP: // up
+                    this.y -= BLOCK_SIZE
+                    break;
+                case DIRECTIONS.DOWN: // down
+                    this.y += BLOCK_SIZE
+                    break;
+                case DIRECTIONS.LEFT: // left
+                    this.x -= BLOCK_SIZE
+                    break;
+                case DIRECTIONS.RIGHT: // right
+                    this.x += BLOCK_SIZE
+                    break;
             }
 
             this.pacmanDir = pacmanDir //update pacman direction

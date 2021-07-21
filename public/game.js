@@ -179,11 +179,8 @@ socket.on('update-players-info', updatePlayersInfo)
 function onPlayerDeath(pl) {
 	const id = pl.id
 
-	// TODO: Add game over
-	// gameOver = isGameOver(pl)
-
 	pacmans.forEach(pacman => {
-		if (pacman.id == id) pacman.reset()
+		if (pacman.id == id) { pacman.reset(players[id], nScreens) }
 	})
 }
 socket.on('player-death', onPlayerDeath)
@@ -284,8 +281,10 @@ function draw() {
 						players[id].direction = DIRECTIONS.STOP
 						players[id].x = players[id].startX
 						players[id].y = players[id].startY
+						pacman.x = players[id].startX
+						pacman.y = players[id].startY
+						players[id].screen = players[id].startScreen
 						players[id].hasMoved = false
-						socket.emit('update-players-info', players[id])
 						socket.emit('player-death', players[id])
 						socket.emit('play-audio', 'death')
 					} else {

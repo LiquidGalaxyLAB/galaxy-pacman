@@ -49,13 +49,17 @@ class Player {
 
     /**
      * Reset method -> resets player position, direction and facing direction
+     * @param {Object} player object containing player info like starting position
+     * @param {number} nScreens number of total screens in liquid galaxy
      */
-    reset(player) {
+    reset(player, nScreens) {
         this.direction = DIRECTIONS.STOP
         this.facing = DIRECTIONS.RIGHT
         if (player) {
-            this.x = player.startX
             this.y = player.startY
+            let isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+            let offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+            this.x = player.startX - (window.innerWidth * offsetIndex)
         } else {
             this.x = this.startX
             this.y = this.startY
