@@ -77,7 +77,6 @@ io.on('connect', socket => {
      */
     function onDisconnect() {
         if (players[socket.id]) delete players[socket.id]
-        console.log('disconnect', players)
 
         io.emit('update-players-object', players)
     }
@@ -123,6 +122,12 @@ io.on('connect', socket => {
         players[id].hasMoved = false
         io.emit('pacman-death', player)
         io.emit('update-players-info', players)
+
+        if(players[id].lives <= 0) {
+            if (players[id]) delete players[id]
+
+            io.emit('update-players-object', players)
+        }
     }
     socket.on('pacman-death', resetPacman)
 

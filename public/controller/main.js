@@ -82,7 +82,6 @@ function onNewPlayer() {
  * @param {Object} screen screen object containing info like screen number and total of screens
  */
  function screenSetup(screen) {
-     console.log('screen', screen)
 	nScreens = screen.nScreens;
 }
 socket.on("new-screen", screenSetup)
@@ -107,6 +106,8 @@ function onPlayerDeath(pl) {
     for (let i = 0; i < pl.lives; i++) {
         livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
     }
+
+    if(pl.lives <= 0) onGameEnd(false)
 }
 socket.on('pacman-death', onPlayerDeath)
 

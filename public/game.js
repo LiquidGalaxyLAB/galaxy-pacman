@@ -203,6 +203,7 @@ socket.on('update-players-info', updatePlayersInfo)
 function onPacmanDeath(pl) {
 	const id = pl.id
 
+
 	pacmans.forEach(pacman => {
 		if (pacman.id == id) { pacman.reset(players[id], nScreens) }
 	})
@@ -324,6 +325,7 @@ function draw() {
 						players[pacmanId].screen = players[pacmanId].startScreen
 						players[pacmanId].x = players[pacmanId].startX
 						players[pacmanId].y = players[pacmanId].startY
+						players[pacmanId].lives--
 						pacman.x = players[pacmanId].startX
 						pacman.y = players[pacmanId].startY
 						players[pacmanId].hasMoved = false
