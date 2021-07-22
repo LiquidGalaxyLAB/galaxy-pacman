@@ -15,7 +15,7 @@ const controllerConatiner = document.getElementById('controller-container')
 const livesContainer = document.getElementById('lives-container')
 const pacmanLifeSprite = document.createElement('img');
 pacmanLifeSprite.src = "../assets/pacman.png"
-pacmanLifeSprite.style = "height: 10vh; display: inline-block;"
+pacmanLifeSprite.style = "height: 5vw; display: inline-block; pointer-events: none;"
 
 // start with full lives
 for (let i = 0; i < PACMAN_LIVES; i++) {
@@ -54,6 +54,9 @@ pacmanJoinButton.addEventListener('click', onPacmanJoin)
  function onGhostJoin() {
     newPlayer.color = colorPicker.value
     newPlayer.type = PLAYERTYPES.GHOST
+
+    // hide lives counter
+    livesContainer.style = 'visibility: hidden'
     onNewPlayer()
 }
 ghostJoinButton.addEventListener('click', onGhostJoin)
