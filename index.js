@@ -51,10 +51,8 @@ io.on('connect', socket => {
      */
     function onNewPlayer(newPl) {
         players[socket.id] = newPl;
-        console.log('new ´playuer')
 
         io.emit('update-players-object', players)
-        io.emit('new-player', players[socket.id])
     }
     socket.on('new-player', onNewPlayer)
 
@@ -65,6 +63,14 @@ io.on('connect', socket => {
         io.emit('create-pacman', pacman)
     }
     socket.on('create-pacman', onCreatePacman)
+
+    /**
+     * On Create Ghost method -> responsible for emitting to all sockets that a ghost has been created
+     */
+     function onCreateGhost(ghost) {
+        io.emit('create-ghost', ghost)
+    }
+    socket.on('create-ghost', onCreateGhost)
 
     /**
      * On Disconnect method -> responsible for updating players object and emitting to all sockets that a player has disconnected
@@ -104,10 +110,10 @@ io.on('connect', socket => {
     socket.on('update-players-info', updatePlayerInfo)
 
     /**
-     * Reset player method -> responsible for emitting to all sockets to reset player information and removing one life
+     * Reset Pacman method -> responsible for emitting to all sockets to reset player information and remove one life
      * @param {Object} player indicates reset player object
      */
-    function resetPlayer(player) {
+    function resetPacman(player) {
         const id = player.id
         players[id].lives--
         players[id].direction = player.direction
@@ -115,10 +121,26 @@ io.on('connect', socket => {
         players[id].y = players[id].startY
         players[id].screen = players[id].startScreen
         players[id].hasMoved = false
-        io.emit('player-death', player)
+        io.emit('pacman-death', player)
         io.emit('update-players-info', players)
     }
-    socket.on('player-death', resetPlayer)
+    socket.on('pacman-death', resetPacman)
+
+    /**
+     * Reset Ghost method -> responsible for emitting to all sockets to reset player information and removing one life
+     * @param {Object} player indicates reset player object
+     */
+     function resetGhost(player) {
+        const id = player.id
+        players[id].direction = player.direction
+        players[id].x = players[id].startX
+        players[id].y = players[id].startY
+        players[id].screen = players[id].startScreen
+        players[id].hasMoved = false
+        io.emit('ghost-death', player)
+        io.emit('update-players-info', players)
+    }
+    socket.on('ghost-death', resetGhost)
 
     // emit hide text to all sockets
     socket.on('hide-initial-text', () => io.emit('hide-initial-text'))

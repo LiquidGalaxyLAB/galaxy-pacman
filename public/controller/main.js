@@ -1,4 +1,4 @@
-import { DIRECTIONS, PACMAN_LIVES } from "../consts.js"
+import { DIRECTIONS, PACMAN_LIVES, PLAYERTYPES } from "../consts.js"
 var socket = io()
 let nScreens; // variable will be set to have total number of screens in screenSetup method
 
@@ -6,7 +6,8 @@ let nScreens; // variable will be set to have total number of screens in screenS
 const scoreText = document.getElementById('score-text')
 const centerText = document.getElementById('center-text')
 const colorPicker = document.getElementById('color-picker')
-const colorSubmitButton = document.getElementById('pick-color-btn')
+const pacmanJoinButton = document.getElementById('pick-pacman-btn')
+const ghostJoinButton = document.getElementById('pick-ghost-btn')
 const colorPickerContainer = document.getElementById('color-picker-container')
 const controllerConatiner = document.getElementById('controller-container')
 
@@ -36,26 +37,36 @@ var newPlayer = {
     lives: PACMAN_LIVES,
     hasMoved: false,
 }
+
 /**
- * On Color Submit method -> responsible for setting player color and calling onNewPlayer mehtod
+ * On Pacman Join method -> responsible for setting pacman color/type and calling onNewPlayer mehtod
  */
- function onColorSubmit() {
+ function onPacmanJoin() {
     newPlayer.color = colorPicker.value
+    newPlayer.type = PLAYERTYPES.PACMAN
     onNewPlayer()
 }
-colorSubmitButton.addEventListener('click', onColorSubmit)
+pacmanJoinButton.addEventListener('click', onPacmanJoin)
+
+/**
+ * On Ghost Join method -> responsible for setting pacman color/type and calling onNewPlayer mehtod
+ */
+ function onGhostJoin() {
+    newPlayer.color = colorPicker.value
+    newPlayer.type = PLAYERTYPES.GHOST
+    onNewPlayer()
+}
+ghostJoinButton.addEventListener('click', onGhostJoin)
 
 /**
  * On New Player method -> responsible for setting player object and emitting that a new player has connected
  */
 function onNewPlayer() {
     newPlayer.id = socket.id
-    console.log('nScrens', nScreens)
     newPlayer.screen = Math.floor(Math.random() * nScreens) + 1 //random screen from 1 to number of screens
     newPlayer.startScreen = newPlayer.screen
     newPlayer.currentMap = newPlayer.screen == 1 ? 'master' : 'slave'
     socket.emit('new-player', newPlayer)
-    console.log('new player', newPlayer)
 
     //switch to controller
     colorPickerContainer.style = 'visibility: hidden'
@@ -94,7 +105,7 @@ function onPlayerDeath(pl) {
         livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
     }
 }
-socket.on('player-death', onPlayerDeath)
+socket.on('pacman-death', onPlayerDeath)
 
 /**
  * On game end method -> set controller screen based on victory or loss

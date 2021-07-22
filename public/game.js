@@ -14,6 +14,7 @@ import {
 	GHOSTEAT_SCORE_VALUE,
 	POWERPILL_SCORE_VALUE,
 	POWERPILL_DURATION,
+	PLAYERTYPES,
 } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
@@ -81,21 +82,33 @@ socket.on("new-screen", screenSetup)
 function onUpdatePlayersObj(pls) {
 	var playersFound = {};
 	for (var id in pls) {
-		// if player not added yet -> create
+		// if player not added yet -> create based on type
 		if (!Object.keys(players).includes(id)) {
-			players[id] = pls[id]
-			createPacman(players[id])
+			if (pls[id].type == PLAYERTYPES.PACMAN) {
+				players[id] = pls[id]
+				createPacman(players[id])
+			} else if (pls[id].type == PLAYERTYPES.GHOST) {
+				players[id] = pls[id]
+				createGhost(players[id])
+			}
 		}
 		playersFound[id] = true;
 	};
 
 
 	for (var id in players) {
-		// if one of the players is no longer connected (not in the players object) delete from object and pacmans array
+		// if one of the players is no longer connected (not in the players object) delete from object and corresponding array
 		if (!Object.keys(playersFound).includes(id)) {
-			let index = pacmans.findIndex(pacman => pacman.id == id)
-			pacmans.splice(index, 1)
-			delete players[id];
+			if (players[id].type == PLAYERTYPES.PACMAN) {
+				let index = pacmans.findIndex(pacman => pacman.id == id)
+				pacmans.splice(index, 1)
+				delete players[id];
+			} else if (players[id].type == PLAYERTYPES.GHOST) {
+				let index = ghosts.findIndex(ghost => ghost.id == id)
+				ghosts.splice(index, 1)
+				delete players[id];
+			}
+
 		}
 	}
 }
@@ -111,6 +124,17 @@ function onCreatePacman(pacman) {
 	}
 }
 socket.on('create-pacman', onCreatePacman)
+
+/**
+ * On Create Ghost method -> responsible for creating ghost on other screens
+ * @param {Object} ghost object with all information needed to create the ghost
+ */
+function onCreateGhost(ghost) {
+	if (screenNumber !== ghost.screen) {
+		ghosts.push(new Ghost(ghost.x, ghost.y, ghost.color, ghost.id))
+	}
+}
+socket.on('create-ghost', onCreateGhost)
 
 /**
  * On Game Start method -> responsible for allowing game start
@@ -173,17 +197,30 @@ function updatePlayersInfo(pls) {
 socket.on('update-players-info', updatePlayersInfo)
 
 /**
- * Reset Player method -> responsible for resetting player on death and defining if game is over
+ * On Pacman Death method -> responsible for resetting pacman on death
  * @param {Object} pl player object with reset stats and new amount of lives
  */
-function onPlayerDeath(pl) {
+function onPacmanDeath(pl) {
 	const id = pl.id
 
 	pacmans.forEach(pacman => {
 		if (pacman.id == id) { pacman.reset(players[id], nScreens) }
 	})
 }
-socket.on('player-death', onPlayerDeath)
+socket.on('pacman-death', onPacmanDeath)
+
+/**
+ * On Ghost Death method -> responsible for resetting ghost on death
+ * @param {Object} pl player object with reset stats and new amount of lives
+ */
+function onGhostDeath(pl) {
+	const id = pl.id
+
+	ghosts.forEach(ghost => {
+		if (ghost.id == id) { ghost.reset(players[id], nScreens) }
+	})
+}
+socket.on('ghost-death', onGhostDeath)
 
 /**
  * Set foods eaten method -> set all foods eaten for specific screen
@@ -218,6 +255,7 @@ function onGameRestart() {
 	blocks = []
 	pacmans = []
 	ghosts = []
+	defaultGhosts = []
 	gameOver = false
 	centerText.style = 'display: none'
 	allowGameStart = false
@@ -244,6 +282,8 @@ var pacmans = [];
 var blocks = [];
 // Array of blocks in the map
 var ghosts = [];
+// Array of ghosts that spawn with ai (non player ghosts)
+var defaultGhosts = []
 
 // Draw function -> draw objects on canvas
 function draw() {
@@ -267,103 +307,161 @@ function draw() {
 	if (!gameOver) {
 		//draw each pacman
 		pacmans.forEach(function (pacman) {
-			const id = pacman.id
-			checkPlayerScreen(id)
-			if (allowGameStart) pacman.updatePosition(players[id].direction, screenNumber, nScreens, players[id])
-			else pacman.updateFixedPosition(screenNumber, nScreens, players[id])
+			const pacmanId = pacman.id
+			checkPlayerScreen(pacmanId)
+			if (allowGameStart) pacman.updatePosition(players[pacmanId].direction, screenNumber, nScreens, players[pacmanId])
+			else pacman.updateFixedPosition(screenNumber, nScreens, players[pacmanId])
 			const pacmanPos = pacman.getRowCol()
-			for (const ghost of ghosts) {
+
+			// Check collision with default ghosts
+			for (const ghost of defaultGhosts) {
 				const ghostPos = ghost.getRowCol()
 
 				// only collide if position is same and player has moved
-				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && players[id].hasMoved) {
+				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && players[pacmanId].hasMoved) {
 					if (!pacman.isPoweredUp) {
-						players[id].direction = DIRECTIONS.STOP
-						players[id].x = players[id].startX
-						players[id].y = players[id].startY
-						pacman.x = players[id].startX
-						pacman.y = players[id].startY
-						players[id].screen = players[id].startScreen
-						players[id].hasMoved = false
-						socket.emit('player-death', players[id])
+						players[pacmanId].direction = DIRECTIONS.STOP
+						players[pacmanId].screen = players[pacmanId].startScreen
+						players[pacmanId].x = players[pacmanId].startX
+						players[pacmanId].y = players[pacmanId].startY
+						pacman.x = players[pacmanId].startX
+						pacman.y = players[pacmanId].startY
+						players[pacmanId].hasMoved = false
+						socket.emit('pacman-death', players[pacmanId])
 						socket.emit('play-audio', 'death')
 					} else {
 						ghost.reset()
-						players[id].score += GHOSTEAT_SCORE_VALUE
-						socket.emit('update-players-info', players[id])
+						players[pacmanId].score += GHOSTEAT_SCORE_VALUE
+						socket.emit('update-players-info', players[pacmanId])
+						socket.emit('play-audio', 'eatGhost')
+					}
+				}
+			}
+
+			// Check collision with player ghosts
+			for (const ghost of ghosts) {
+				const ghostId = ghost.id
+				const ghostPos = ghost.getRowCol()
+
+				// only collide if position is same and player has moved
+				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && players[pacmanId].hasMoved) {
+					if (!pacman.isPoweredUp) {
+						players[pacmanId].direction = DIRECTIONS.STOP
+						players[pacmanId].screen = players[pacmanId].startScreen
+						players[pacmanId].x = players[pacmanId].startX
+						players[pacmanId].y = players[pacmanId].startY
+						pacman.x = players[pacmanId].startX
+						pacman.y = players[pacmanId].startY
+						players[pacmanId].hasMoved = false
+						socket.emit('pacman-death', players[pacmanId])
+						socket.emit('play-audio', 'death')
+					} else {
+						//reset ghost
+						players[ghostId].direction = DIRECTIONS.STOP
+						players[ghostId].screen = players[ghostId].startScreen
+						players[ghostId].x = players[ghostId].startX
+						players[ghostId].y = players[ghostId].startY
+						ghost.x = players[ghostId].startX
+						ghost.y = players[ghostId].startY
+						players[ghostId].hasMoved = false
+						socket.emit('ghost-death', players[ghostId])
+
+						//add score to pacman
+						players[pacmanId].score += GHOSTEAT_SCORE_VALUE
+						socket.emit('update-players-info', players[pacmanId])
+
+						//play sound
 						socket.emit('play-audio', 'eatGhost')
 					}
 				}
 			}
 
 			// food/powerpill eating logic
-			if (players[id].currentMap == "master" && screenNumber == 1) {
+			if (players[pacmanId].currentMap == "master" && screenNumber == 1) {
 				if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.FOOD && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-					players[id].score += FOOD_SCORE_VALUE
+					players[pacmanId].score += FOOD_SCORE_VALUE
 					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set food to eaten
 					availableFoods--
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
 					socket.emit('play-audio', 'munch')
-					socket.emit('update-players-info', players[id])
+					socket.emit('update-players-info', players[pacmanId])
 				} else if (currentMap[pacmanPos.row][pacmanPos.col] == ENTITIES.POWERPILL && !blocks[pacmanPos.row][pacmanPos.col]?.wasEaten) {
-					players[id].score += POWERPILL_SCORE_VALUE
-					players[id].isPoweredUp = true
+					players[pacmanId].score += POWERPILL_SCORE_VALUE
+					players[pacmanId].isPoweredUp = true
 					blocks[pacmanPos.row][pacmanPos.col].wasEaten = true; // set pill to eaten
 					availableFoods--
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
 					socket.emit('play-audio', 'munch')
-					socket.emit('update-players-info', players[id])
-					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: id })
+					socket.emit('update-players-info', players[pacmanId])
+					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: pacmanId })
 				}
-			} else if (players[id].currentMap == "slave" && screenNumber !== 1 && players[id].screen == screenNumber) {
-				const playerPos = players[id].pos
+			} else if (players[pacmanId].currentMap == "slave" && screenNumber !== 1 && players[pacmanId].screen == screenNumber) {
+				const playerPos = players[pacmanId].pos
 				//relative col calculation
-				let isRightScreen = players[id].screen <= (Math.ceil(nScreens / 2));
-				let offsetIndex = isRightScreen ? players[id].screen - 1 : ((nScreens + 1) - players[id].screen) * -1;
+				let isRightScreen = players[pacmanId].screen <= (Math.ceil(nScreens / 2));
+				let offsetIndex = isRightScreen ? players[pacmanId].screen - 1 : ((nScreens + 1) - players[pacmanId].screen) * -1;
 				let realtiveCol = playerPos.col - (offsetIndex * GRID_WIDTH)
 
 				if (currentMap[playerPos.row][realtiveCol] == ENTITIES.FOOD && !blocks[playerPos.row][realtiveCol]?.wasEaten) {
-					players[id].score += FOOD_SCORE_VALUE
+					players[pacmanId].score += FOOD_SCORE_VALUE
 					blocks[playerPos.row][realtiveCol].wasEaten = true; // set food to eaten
 					availableFoods--
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
 					socket.emit('play-audio', 'munch')
-					socket.emit('update-players-info', players[id])
+					socket.emit('update-players-info', players[pacmanId])
 				} else if (currentMap[playerPos.row][realtiveCol] == ENTITIES.POWERPILL && !blocks[playerPos.row][realtiveCol]?.wasEaten) {
-					players[id].score += POWERPILL_SCORE_VALUE
-					players[id].isPoweredUp = true
+					players[pacmanId].score += POWERPILL_SCORE_VALUE
+					players[pacmanId].isPoweredUp = true
 					blocks[playerPos.row][realtiveCol].wasEaten = true; // set pill to eaten
 					availableFoods--
 					if (availableFoods == 0) {
 						socket.emit('set-foods-eaten', screenNumber)
 					}
 					socket.emit('play-audio', 'munch')
-					socket.emit('update-players-info', players[id])
-					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: id })
+					socket.emit('update-players-info', players[pacmanId])
+					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: pacmanId })
 				}
 			}
 
 			// emit player position to all screens
 			if (screenNumber == 1) {
-				players[id].x = pacman.x
-				players[id].y = pacman.y
-				players[id].pos = pacman.getRowCol()
-				socket.emit('update-players-info', players[id])
+				players[pacmanId].x = pacman.x
+				players[pacmanId].y = pacman.y
+				players[pacmanId].pos = pacman.getRowCol()
+				socket.emit('update-players-info', players[pacmanId])
 			}
 			pacman.draw(ctx);
 		});
 
-		//draw ghosts
+		//draw player ghosts
 		ghosts.forEach(function (ghost) {
+			const ghostId = ghost.id
+
+			checkPlayerScreen(ghostId)
+			if (allowGameStart) ghost.updatePosition(players[ghostId].direction, screenNumber, nScreens, players[ghostId])
+			else ghost.updateFixedPosition(screenNumber, nScreens, players[ghostId])
+
+			// emit player position to all screens
+			if (screenNumber == 1) {
+				players[ghostId].x = ghost.x
+				players[ghostId].y = ghost.y
+				players[ghostId].pos = ghost.getRowCol()
+				socket.emit('update-players-info', players[ghostId])
+			}
+			ghost.draw(ctx)
+		})
+
+		//draw default ghosts
+		defaultGhosts.forEach(function (ghost) {
 			const keys = Object.keys(players)
 			// mirror first players movemnt
-			if (allowGameStart && keys.length) ghost.updatePosition(players[keys[0]].direction, currentMap)
+			if (allowGameStart && keys.length) ghost.updateAiPosition(players[keys[0]].direction, currentMap)
 			ghost.draw(ctx)
 		})
 	}
@@ -409,10 +507,13 @@ function createGrid(map) {
 		})
 	});
 
-	createGhosts()
+	createGhost(null) //null for ai controlled ghost
 }
 
-// Create Pacman method -> Get a random position for pacman spawn point and create pacman object in pacmans array
+/**
+ * Create Pacman method -> Get a random position for pacman spawn point and create pacman object in pacmans array
+ * @param {Object} player player object containing info like player screen and current map
+ */
 function createPacman(player) {
 	const playerMap = player.currentMap == 'master' ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
 
@@ -457,15 +558,17 @@ function createPacman(player) {
 		}
 		socket.emit('create-pacman', pacmanAux)
 	}
-	console.log('pamcans', pacmans)
 }
 
-// Create Ghosts method -> Get a random position for ghosts spawn point and create ghosts objects in ghosts array
-function createGhosts() {
-	const amountOfGhosts = Math.floor(Math.random() * 4) + 1 // random number from 1 to 4
+/**
+ * Create Ghost method -> Get a random position for ghost spawn point and create ghost object in ghosts array
+ * @param {Object} player player object containing info like player screen and current map
+ */
+function createGhost(player) {
 
 	let availableColors = Array.from(ghostsColors);
 
+	// array of available positions
 	const availablePositions = []
 	currentMap.forEach((row, i) => {
 		row.forEach((block, j) => {
@@ -473,9 +576,10 @@ function createGhosts() {
 		})
 	})
 
-	for (let i = 0; i < amountOfGhosts; i++) {
+	let randomIndex;
+	if (player == null) { // add one ghost with ai
 		//get color
-		let randomIndex = Math.floor(Math.random() * availableColors.length)
+		randomIndex = Math.floor(Math.random() * availableColors.length)
 		let color = availableColors[randomIndex]
 		availableColors.splice(randomIndex, 1)
 
@@ -485,7 +589,38 @@ function createGhosts() {
 		//create ghost
 		const x = availablePositions[randomIndex].j * BLOCK_SIZE
 		const y = availablePositions[randomIndex].i * BLOCK_SIZE
-		ghosts.push(new Ghost(x, y, color));
+		defaultGhosts.push(new Ghost(x, y, color));
+	} else {
+		randomIndex = Math.floor(Math.random() * availablePositions.length)
+
+		if (screenNumber == player.screen) {
+			//create ghost
+
+			// get random coordinates
+			const x = availablePositions[randomIndex].j * BLOCK_SIZE
+			const y = availablePositions[randomIndex].i * BLOCK_SIZE
+
+			// adapt based on screen
+			let isRightScreen = player.screen <= (Math.ceil(nScreens / 2));
+			let offsetIndex = isRightScreen ? player.screen - 1 : ((nScreens + 1) - player.screen) * -1;
+			let relativeX = x + (window.innerWidth * offsetIndex)
+			const masterGhost = new Ghost(x, y, player.color) // ghost with original coordinates (used for getting row and col)
+
+			// create ghost
+			const newGhost = new Ghost(relativeX, y, player.color, player.id) // ghost with relative coordinates
+			ghosts.push(newGhost)
+			player.x = relativeX
+			player.y = y
+			player.startX = relativeX
+			player.startY = y
+			player.pos = masterGhost.getRowCol()
+			socket.emit('update-players-info', player)
+
+			const ghostAux = {
+				x: relativeX, y, color: player.color, id: player.id, screen: screenNumber,
+			}
+			socket.emit('create-ghost', ghostAux)
+		}
 	}
 }
 
@@ -510,7 +645,7 @@ function isGameOver() {
 	if (!foodsEaten.includes(false)) {
 		AudioController.stop('siren')
 		AudioController.stop('powerSiren')
-		centerText.innerHTML = "YOU WIN"
+		centerText.innerHTML = "YOU WIN!"
 		centerText.style = "display: block"
 		socket.emit('game-end', true) // set victory as true
 		return true

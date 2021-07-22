@@ -8,8 +8,8 @@ import Player from "./Player.js"
  * @param {String} color indicates object color
  */
 class Ghost extends Player {
-    constructor(x, y, color) {
-        super(x, y, color)
+    constructor(x, y, color, id) {
+        super(x, y, color, id)
         this.pacmanDir = DIRECTIONS.STOP
     }
 
@@ -82,13 +82,11 @@ class Ghost extends Player {
     }
 
     /**
-     * Update position method -> update ghost position mirroring pacman direction
-     * @param {String} pacmanDir indicates pacmanDirection
+     * Update artificial intelligence position method -> update ghost position mirroring pacman direction
+     * @param {String} pacmanDir indicates pacmanDirection (if ghost is a player)
      * @param {Array} map two dimensional array with map layout
      */
-    updatePosition(pacmanDir, map) {
-        // TODO: Remove once starts working on multiplayer
-        this.relativeX = null
+    updateAiPosition(pacmanDir, map) {
         switch (this.direction) {
             case DIRECTIONS.UP: // up
                 this.moveInterval++

@@ -55,7 +55,11 @@ export const ENTITIES = {
   GHOSTLAIR: 6,
   GHOSTLAIR_DOOR: 7,
   GHOST: 8,
-  
+}
+
+export const PLAYERTYPES = {
+  GHOST: 'ghost',
+  PACMAN: 'pacman',
 }
 
 /** *
