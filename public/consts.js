@@ -32,6 +32,11 @@ export const POWERPILL_DURATION = 4000
 export const PACMAN_LIVES = 5
 // Ghost lair door color
 export const LAIR_DOOR_COLOR = "#edd237"
+// amount that is added to player score everytime they eat a pacman
+export const PACMANEAT_SCORE_VALUE = 300
+// amount that is removed from ghost score everytime they get eaten by a pacman
+export const GHOST_DEATH_SCORE_LOSS = 400
+
 
 // Direction constants (used for indicating direction of players)
 //  -> IMPORTANT: each direction has to have a unique value between other directions

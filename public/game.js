@@ -15,6 +15,8 @@ import {
 	POWERPILL_SCORE_VALUE,
 	POWERPILL_DURATION,
 	PLAYERTYPES,
+	PACMANEAT_SCORE_VALUE,
+	GHOST_DEATH_SCORE_LOSS,
 } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
@@ -357,6 +359,10 @@ function draw() {
 						players[pacmanId].hasMoved = false
 						socket.emit('pacman-death', players[pacmanId])
 						socket.emit('play-audio', 'death')
+
+						// add score for ghost
+						players[ghostId].score += PACMANEAT_SCORE_VALUE
+						socket.emit('update-players-info', players[ghostId])
 					} else {
 						//reset ghost
 						players[ghostId].direction = DIRECTIONS.STOP
@@ -371,6 +377,11 @@ function draw() {
 						//add score to pacman
 						players[pacmanId].score += GHOSTEAT_SCORE_VALUE
 						socket.emit('update-players-info', players[pacmanId])
+
+						// remove score from ghost
+						players[ghostId].score -= GHOST_DEATH_SCORE_LOSS
+						if(players[ghostId].score < 0) players[ghostId].score = 0
+						socket.emit('update-players-info', players[ghostId])
 
 						//play sound
 						socket.emit('play-audio', 'eatGhost')
