@@ -138,6 +138,23 @@ function onCreateGhost(ghost) {
 }
 socket.on('create-ghost', onCreateGhost)
 
+function pacmanToGhost(pl) {
+	const id = pl.id
+
+	// remove from pacmans array
+	let index = pacmans.findIndex(pacman => pacman.id == id)
+	pacmans.splice(index, 1)
+	gameOver = isGameOver() //check if game over
+
+	// create ghost with same color and add to ghosts array
+	createGhost(players[id], )
+
+	// change player type to ghost
+	players[id].type = PLAYERTYPES.GHOST
+	socket.emit('update-players-info', players[id])
+}
+socket.on('pacman-to-ghost', pacmanToGhost)
+
 /**
  * On Game Start method -> responsible for allowing game start
  */
@@ -204,7 +221,6 @@ socket.on('update-players-info', updatePlayersInfo)
  */
 function onPacmanDeath(pl) {
 	const id = pl.id
-
 
 	pacmans.forEach(pacman => {
 		if (pacman.id == id) { pacman.reset(players[id], nScreens) }
@@ -642,15 +658,15 @@ function createGhost(player) {
  * @param {Object} player player object containing amount of lives and other info
  */
 function isGameOver() {
-	// check player lives
-	// if (player.lives <= 0) {
-	// 	AudioController.stop('siren')
-	// 	AudioController.stop('powerSiren')
-	// 	centerText.innerHTML = "GAME OVER"
-	// 	centerText.style = "display: block"
-	// 	socket.emit('game-end', false) //set victory as false
-	// 	return true
-	// }
+	// check if there are still pacman alive
+	if(pacmans.length == 0) {
+		AudioController.stop('siren')
+		AudioController.stop('powerSiren')
+		centerText.innerHTML = "GHOSTS WIN!"
+		centerText.style = "display: block"
+		socket.emit('game-end', PLAYERTYPES.GHOST) //set victory as false
+		return true
+	}
 
 	// check if all foods were eaten
 	const foodsEaten = Object.values(allFoodsEaten)
@@ -658,9 +674,9 @@ function isGameOver() {
 	if (!foodsEaten.includes(false)) {
 		AudioController.stop('siren')
 		AudioController.stop('powerSiren')
-		centerText.innerHTML = "YOU WIN!"
+		centerText.innerHTML = "PACMANS WIN!"
 		centerText.style = "display: block"
-		socket.emit('game-end', true) // set victory as true
+		socket.emit('game-end', PLAYERTYPES.PACMAN) // set victory as true
 		return true
 	}
 

@@ -29,7 +29,7 @@ export const POWERPILL_SCORE_VALUE = 50
 // how long power pill effect lasts in milliseconds
 export const POWERPILL_DURATION = 4000
 // pacman amount of lives
-export const PACMAN_LIVES = 5
+export const PACMAN_LIVES = 3
 // Ghost lair door color
 export const LAIR_DOOR_COLOR = "#edd237"
 // amount that is added to player score everytime they eat a pacman

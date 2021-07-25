@@ -124,9 +124,7 @@ io.on('connect', socket => {
         io.emit('update-players-info', players)
 
         if(players[id].lives <= 0) {
-            if (players[id]) delete players[id]
-
-            io.emit('update-players-object', players)
+            io.emit('pacman-to-ghost', players[id])
         }
     }
     socket.on('pacman-death', resetPacman)

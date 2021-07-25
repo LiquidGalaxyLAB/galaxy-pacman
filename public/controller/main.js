@@ -106,20 +106,18 @@ function onPlayerDeath(pl) {
     for (let i = 0; i < pl.lives; i++) {
         livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
     }
-
-    if(pl.lives <= 0) onGameEnd(false)
 }
 socket.on('pacman-death', onPlayerDeath)
 
 /**
  * On game end method -> set controller screen based on victory or loss
- * @param {Boolean} victory boolean responsible for defining victory (true) or loss (false)
+ * @param {String} winners player type indicating if pacmans or ghosts won
  */
-function onGameEnd(victory) {
-    if(victory) {
-        centerText.innerHTML = `YOU WIN!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
+function onGameEnd(winners) {
+    if(winners == PLAYERTYPES.GHOST) {
+        centerText.innerHTML = `GHOSTS WIN!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
     } else {
-        centerText.innerHTML = `YOU LOSE!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
+        centerText.innerHTML = `PACMANS WIN!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
     }
     const insertbutton = document.createElement('button')
     insertbutton.className = 'custom-button'
