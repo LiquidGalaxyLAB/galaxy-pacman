@@ -79,10 +79,16 @@
 <body style="margin: 0; background-color: rgb(46, 46, 46); overflow-y: hidden;">
     <div id="color-picker-container">
         <div id="hint-text">Select the color for your player:</div>
-        
+
         <div class="center-content">
+            <label style="color: white; font-family: Retro;" for="color-picker">COLOR:</label>
             <input id="color-picker" value="#FFFF00" type="color">
-            
+
+            <div style="margin-top: 10%;">
+                <label style="color: white; font-family: Retro;" for="name">NAME (MAX 5)</label>
+
+                <input type="text" id="player-name" name="name" minlength="1" maxlength="4">
+            </div>
         </div>
 
         <div class="bottom-content">
@@ -90,6 +96,7 @@
             <button id="pick-ghost-btn" class="custom-button" style="margin-bottom: 8%;">JOIN AS GHOST</button>
         </div>
     </div>
+
     <div style="visibility: hidden" id="controller-container">
         <div id="hint-text">Hold anywhere on the grey square to create a virtual joystick </div>
         <div id="score-text">CURRENT SCORE: 0</div>

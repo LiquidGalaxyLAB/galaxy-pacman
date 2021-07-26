@@ -147,7 +147,7 @@ function pacmanToGhost(pl) {
 	gameOver = isGameOver() //check if game over
 
 	// create ghost with same color and add to ghosts array
-	createGhost(players[id], )
+	createGhost(players[id])
 
 	// change player type to ghost
 	players[id].type = PLAYERTYPES.GHOST
@@ -366,6 +366,10 @@ function draw() {
 				// only collide if position is same and player has moved
 				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && players[pacmanId].hasMoved) {
 					if (!pacman.isPoweredUp) {
+						// add score for ghost
+						players[ghostId].score += PACMANEAT_SCORE_VALUE
+						socket.emit('update-players-info', players[ghostId])
+
 						players[pacmanId].direction = DIRECTIONS.STOP
 						players[pacmanId].screen = players[pacmanId].startScreen
 						players[pacmanId].x = players[pacmanId].startX
@@ -375,11 +379,16 @@ function draw() {
 						players[pacmanId].hasMoved = false
 						socket.emit('pacman-death', players[pacmanId])
 						socket.emit('play-audio', 'death')
-
-						// add score for ghost
-						players[ghostId].score += PACMANEAT_SCORE_VALUE
-						socket.emit('update-players-info', players[ghostId])
 					} else {
+						//add score to pacman
+						players[pacmanId].score += GHOSTEAT_SCORE_VALUE
+						socket.emit('update-players-info', players[pacmanId])
+
+						// remove score from ghost
+						players[ghostId].score -= GHOST_DEATH_SCORE_LOSS
+						if (players[ghostId].score < 0) players[ghostId].score = 0
+						socket.emit('update-players-info', players[ghostId])
+
 						//reset ghost
 						players[ghostId].direction = DIRECTIONS.STOP
 						players[ghostId].screen = players[ghostId].startScreen
@@ -389,15 +398,6 @@ function draw() {
 						ghost.y = players[ghostId].startY
 						players[ghostId].hasMoved = false
 						socket.emit('ghost-death', players[ghostId])
-
-						//add score to pacman
-						players[pacmanId].score += GHOSTEAT_SCORE_VALUE
-						socket.emit('update-players-info', players[pacmanId])
-
-						// remove score from ghost
-						players[ghostId].score -= GHOST_DEATH_SCORE_LOSS
-						if(players[ghostId].score < 0) players[ghostId].score = 0
-						socket.emit('update-players-info', players[ghostId])
 
 						//play sound
 						socket.emit('play-audio', 'eatGhost')
@@ -659,12 +659,18 @@ function createGhost(player) {
  */
 function isGameOver() {
 	// check if there are still pacman alive
-	if(pacmans.length == 0) {
+	if (pacmans.length == 0) {
 		AudioController.stop('siren')
 		AudioController.stop('powerSiren')
-		centerText.innerHTML = "GHOSTS WIN!"
+		const textDiv = document.createElement('div')
+		textDiv.innerHTML = "GHOSTS WIN!"
+		centerText.innerHTML = ''
+		centerText.appendChild(textDiv)
+
 		centerText.style = "display: block"
 		socket.emit('game-end', PLAYERTYPES.GHOST) //set victory as false
+
+		setupScoreboard()
 		return true
 	}
 
@@ -681,6 +687,68 @@ function isGameOver() {
 	}
 
 	return false
+}
+
+function setupScoreboard() {
+	const col = document.createElement('div')
+
+	const row = document.createElement('div')
+	row.className = "row"
+
+	// add col titles
+	const rankText = col.cloneNode()
+	rankText.innerHTML = 'RANK'
+	row.appendChild(rankText)
+
+	const scoreText = col.cloneNode()
+	scoreText.innerHTML = 'SCORE'
+	row.appendChild(scoreText)
+
+	const nameText = col.cloneNode()
+	nameText.innerHTML = 'NAME'
+	row.appendChild(nameText)
+
+	centerText.appendChild(row)
+
+	// get all players scores
+	let playersAux = [], playersScores = [];
+	let index = 0
+	for (const id in players) {
+		playersAux.push({ score: players[id].score, id, name: players[id].name, color: players[id].color });
+		playersScores.push(players[id].score)
+		index++
+	}
+
+	for (let index = 0; index < 3 && index < Object.keys(players).length; index++) {
+		const newRow = row.cloneNode()
+
+		const playerRank = col.cloneNode()
+		if (index == 0) playerRank.innerHTML = "1st"
+		else if (index == 1) playerRank.innerHTML = "2nd"
+		else if (index == 2) playerRank.innerHTML = "3rd"
+		newRow.appendChild(playerRank)
+
+		// get highest score player
+		const playerIndex = playersScores.indexOf(Math.max(...playersScores))
+		const player = playersAux[playerIndex]
+
+		// add score to row
+		const playerScore = col.cloneNode()
+		playerScore.innerHTML = player.score
+		newRow.appendChild(playerScore)
+
+		// add player name
+		const nameText = col.cloneNode()
+		nameText.innerHTML = player.name.length ? player.name : "-"
+		newRow.appendChild(nameText)
+
+		newRow.style = `color: ${player.color}`
+		
+		// remove player and score from arrays and add row to center div
+		playersAux.splice(playerIndex, 1)
+		playersScores.splice(playerIndex, 1)
+		centerText.appendChild(newRow)
+	}
 }
 
 function checkPlayerScreen(playerId) {

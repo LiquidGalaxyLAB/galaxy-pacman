@@ -6,6 +6,7 @@ let nScreens; // variable will be set to have total number of screens in screenS
 const scoreText = document.getElementById('score-text')
 const centerText = document.getElementById('center-text')
 const colorPicker = document.getElementById('color-picker')
+const playerNameInput = document.getElementById('player-name')
 const pacmanJoinButton = document.getElementById('pick-pacman-btn')
 const ghostJoinButton = document.getElementById('pick-ghost-btn')
 const colorPickerContainer = document.getElementById('color-picker-container')
@@ -26,6 +27,7 @@ for (let i = 0; i < PACMAN_LIVES; i++) {
 var currentScore = 0
 var newPlayer = {
     id: null,
+    name: '',
     x: 0,
     y: 0,
     startX: 0,
@@ -65,6 +67,7 @@ ghostJoinButton.addEventListener('click', onGhostJoin)
  * On New Player method -> responsible for setting player object and emitting that a new player has connected
  */
 function onNewPlayer() {
+    newPlayer.name = playerNameInput.value
     newPlayer.id = socket.id
     newPlayer.screen = Math.floor(Math.random() * nScreens) + 1 //random screen from 1 to number of screens
     newPlayer.startScreen = newPlayer.screen
