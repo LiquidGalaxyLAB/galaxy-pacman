@@ -20,7 +20,7 @@ pacmanLifeSprite.style = "height: 5vw; display: inline-block; pointer-events: no
 
 // start with full lives
 for (let i = 0; i < PACMAN_LIVES; i++) {
-    livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
+    livesContainer.appendChild(pacmanLifeSprite.cloneNode())
 }
 
 // player variables
@@ -43,7 +43,7 @@ var newPlayer = {
 /**
  * On Pacman Join method -> responsible for setting pacman color/type and calling onNewPlayer mehtod
  */
- function onPacmanJoin() {
+function onPacmanJoin() {
     newPlayer.color = colorPicker.value
     newPlayer.type = PLAYERTYPES.PACMAN
     onNewPlayer()
@@ -53,7 +53,7 @@ pacmanJoinButton.addEventListener('click', onPacmanJoin)
 /**
  * On Ghost Join method -> responsible for setting pacman color/type and calling onNewPlayer mehtod
  */
- function onGhostJoin() {
+function onGhostJoin() {
     newPlayer.color = colorPicker.value
     newPlayer.type = PLAYERTYPES.GHOST
 
@@ -84,8 +84,8 @@ function onNewPlayer() {
  * Screen setup method -> responsible for setting variables for screen
  * @param {Object} screen screen object containing info like screen number and total of screens
  */
- function screenSetup(screen) {
-	nScreens = screen.nScreens;
+function screenSetup(screen) {
+    nScreens = screen.nScreens;
 }
 socket.on("new-screen", screenSetup)
 
@@ -107,7 +107,7 @@ socket.on('update-players-info', updatePlayerScore)
 function onPlayerDeath(pl) {
     livesContainer.innerHTML = ""
     for (let i = 0; i < pl.lives; i++) {
-        livesContainer.appendChild(pacmanLifeSprite.cloneNode())    
+        livesContainer.appendChild(pacmanLifeSprite.cloneNode())
     }
 }
 socket.on('pacman-death', onPlayerDeath)
@@ -117,7 +117,7 @@ socket.on('pacman-death', onPlayerDeath)
  * @param {String} winners player type indicating if pacmans or ghosts won
  */
 function onGameEnd(winners) {
-    if(winners == PLAYERTYPES.GHOST) {
+    if (winners == PLAYERTYPES.GHOST) {
         centerText.innerHTML = `GHOSTS WIN!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
     } else {
         centerText.innerHTML = `PACMANS WIN!!<br />Your final score was: ${currentScore}<br />Insert coin to play again<br />`
@@ -146,6 +146,8 @@ var manager = nipplejs.create(controllerOptions)
 
 // Controller direction angle
 let controllerDir = DIRECTIONS.STOP;
+// player direction angle
+let playerDir = DIRECTIONS.STOP;
 
 // Controller movement listener
 manager.on('move', function (ev, nipple) {
@@ -153,23 +155,25 @@ manager.on('move', function (ev, nipple) {
     if (nipple.direction) controllerDir = nipple.direction.angle
 
     // If player direction is not same as controller emit for socket to update player direction
+    if (playerDir !== controllerDir) {
+        // this switch is needed in case the directions constants are ever changed
+        let dir;
+        switch (controllerDir) {
+            case "up":
+                dir = DIRECTIONS.UP
+                break;
+            case "down":
+                dir = DIRECTIONS.DOWN
+                break;
+            case "right":
+                dir = DIRECTIONS.RIGHT
+                break;
+            case "left":
+                dir = DIRECTIONS.LEFT
+                break;
+        }
 
-    // this switch is needed in case the directions constants are ever changed
-    let dir;
-    switch (controllerDir) {
-        case "up":
-            dir = DIRECTIONS.UP
-            break;
-        case "down":
-            dir = DIRECTIONS.DOWN
-            break;
-        case "right":
-            dir = DIRECTIONS.RIGHT
-            break;
-        case "left":
-            dir = DIRECTIONS.LEFT
-            break;
+        socket.emit('update-direction', dir)
+        playerDir = controllerDir
     }
-
-    socket.emit('update-direction', dir)
 })

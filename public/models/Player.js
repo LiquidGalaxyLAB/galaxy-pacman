@@ -31,6 +31,8 @@ class Player {
         this.mouthPosition = -1
         // player currently facing direction
         this.facing = DIRECTIONS.RIGHT
+        // true when player position has changed
+        this.shouldUpdate = false
     }
 
     /**
@@ -146,15 +148,22 @@ class Player {
             switch (this.direction) {
                 case DIRECTIONS.UP: // up
                     this.y -= BLOCK_SIZE
+                    this.shouldUpdate = true
                     break;
                 case DIRECTIONS.DOWN: // down
                     this.y += BLOCK_SIZE
+                    this.shouldUpdate = true
                     break;
                 case DIRECTIONS.LEFT: // left
                     this.x -= BLOCK_SIZE
+                    this.shouldUpdate = true
                     break;
                 case DIRECTIONS.RIGHT: // right
                     this.x += BLOCK_SIZE
+                    this.shouldUpdate = true
+                    break;
+                default:
+                    this.shouldUpdate = false
                     break;
             }
         }

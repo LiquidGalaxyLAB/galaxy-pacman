@@ -459,11 +459,12 @@ function draw() {
 			}
 
 			// emit player position to all screens
-			if (screenNumber == 1) {
+			if (screenNumber == 1 && pacman.shouldUpdate) {
 				players[pacmanId].x = pacman.x
 				players[pacmanId].y = pacman.y
 				players[pacmanId].pos = pacman.getRowCol()
 				socket.emit('update-players-info', players[pacmanId])
+				pacman.shouldUpdate = false
 			}
 			pacman.draw(ctx);
 		});
@@ -477,11 +478,12 @@ function draw() {
 			else ghost.updateFixedPosition(screenNumber, nScreens, players[ghostId])
 
 			// emit player position to all screens
-			if (screenNumber == 1) {
+			if (screenNumber == 1 && ghost.shouldUpdate) {
 				players[ghostId].x = ghost.x
 				players[ghostId].y = ghost.y
 				players[ghostId].pos = ghost.getRowCol()
 				socket.emit('update-players-info', players[ghostId])
+				ghost.shouldUpdate = false
 			}
 			ghost.draw(ctx)
 		})
@@ -743,7 +745,7 @@ function setupScoreboard() {
 		newRow.appendChild(nameText)
 
 		newRow.style = `color: ${player.color}`
-		
+
 		// remove player and score from arrays and add row to center div
 		playersAux.splice(playerIndex, 1)
 		playersScores.splice(playerIndex, 1)
@@ -762,8 +764,10 @@ function checkPlayerScreen(playerId) {
 		screen = nScreens - Math.floor(-x / width)
 	}
 
-	players[playerId].screen = screen
-	players[playerId].currentMap = screen == 1 ? 'master' : 'slave'
+	if (players[playerId].screen !== screen) {
+		players[playerId].screen = screen
+		players[playerId].currentMap = screen == 1 ? 'master' : 'slave'
 
-	socket.emit('update-players-info', players[playerId])
+		socket.emit('update-players-info', players[playerId])
+	}
 }
