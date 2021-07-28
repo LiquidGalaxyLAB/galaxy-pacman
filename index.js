@@ -20,7 +20,6 @@ if (myArgs.length == 0 || isNaN(nScreens)) {
     nScreens = 5;
 }
 console.log(`Running Galalxy Pacman for Liquid Galaxy with ${nScreens} screens!`);
-var screens = [];
 var players = {};
 var powerUpTimeout
 
@@ -40,9 +39,8 @@ app.get('/:id', (req, res) => {
 })
 
 // Socket listeners and functions
-io.on('connect', socket => {
+io.on('connect', socket => {    
     console.log(`User connected with id ${socket.id}`)
-    screens.push({ number: Number(screenNumber), id: socket.id });
     socket.emit("new-screen", { number: Number(screenNumber), nScreens: nScreens }) //tell to load screen on local and its number  
 
     /**
@@ -50,9 +48,14 @@ io.on('connect', socket => {
      * @param {Object} newPl new player object containing initial player information
      */
     function onNewPlayer(newPl) {
-        players[socket.id] = newPl;
+        try {
+            console.log('New player connected:', newPl)
+            players[socket.id] = newPl;
 
-        io.emit('update-players-object', players)
+            io.emit('update-players-object', players)
+        } catch (err) {
+            console.error('Error on onNewPlayer method:', err)
+        }
     }
     socket.on('new-player', onNewPlayer)
 
@@ -60,15 +63,25 @@ io.on('connect', socket => {
      * On Create Pacman method -> responsible for emitting to all sockets that a pacman has been created
      */
     function onCreatePacman(pacman) {
-        io.emit('create-pacman', pacman)
+        try {
+            console.log('Creating pacman:', pacman)
+            io.emit('create-pacman', pacman)
+        } catch (err) {
+            console.error('Error on onCreatePacman method:', err)
+        }
     }
     socket.on('create-pacman', onCreatePacman)
 
     /**
      * On Create Ghost method -> responsible for emitting to all sockets that a ghost has been created
      */
-     function onCreateGhost(ghost) {
-        io.emit('create-ghost', ghost)
+    function onCreateGhost(ghost) {
+        try {
+            console.log('Creating ghost:', ghost)
+            io.emit('create-ghost', ghost)
+        } catch (err) {
+            console.log('Error on onCreateGhost method:', err)
+        }
     }
     socket.on('create-ghost', onCreateGhost)
 
@@ -76,9 +89,14 @@ io.on('connect', socket => {
      * On Disconnect method -> responsible for updating players object and emitting to all sockets that a player has disconnected
      */
     function onDisconnect() {
-        if (players[socket.id]) delete players[socket.id]
+        try {
+            console.log(`Player with id ${socket.id} disconnected!`)
+            if (players[socket.id]) delete players[socket.id]
 
-        io.emit('update-players-object', players)
+            io.emit('update-players-object', players)
+        } catch (err) {
+            console.log('Error on onDisconnect method:', err)
+        }
     }
     socket.on('disconnect', onDisconnect)
 
@@ -87,10 +105,15 @@ io.on('connect', socket => {
      * @param {String} dir indicates the new direction
      */
     function updateDirection(dir) {
-        if (players[socket.id]) {
-            players[socket.id].direction = dir
-            players[socket.id].hasMoved = true
-            io.emit('update-players-info', players)
+        try {
+            console.log(`Player with ${socket.id}, update direction to ${dir}`)
+            if (players[socket.id]) {
+                players[socket.id].direction = dir
+                players[socket.id].hasMoved = true
+                io.emit('update-players-info', players)
+            }
+        } catch (err) {
+            console.log('Error on updateDirection method:', err)
         }
     }
     socket.on('update-direction', updateDirection)
@@ -100,11 +123,17 @@ io.on('connect', socket => {
      * @param {Object} pl player object containing player info to update
      */
     function updatePlayerInfo(pl) {
-        const id = pl.id
-        if (players[id]) {
-            players[id] = pl;
+        try {
+            console.log("Updating player info:", pl)
+            const id = pl.id
+            if (players[id]) {
+                players[id] = pl;
+            }
+            io.emit('update-players-info', players)
+        } catch (err) {
+            console.log('Error on updatePlayerInfo method:', err)
         }
-        io.emit('update-players-info', players)
+
     }
     socket.on('update-players-info', updatePlayerInfo)
 
@@ -113,18 +142,23 @@ io.on('connect', socket => {
      * @param {Object} player indicates reset player object
      */
     function resetPacman(player) {
-        const id = player.id
-        players[id].lives--
-        players[id].direction = player.direction
-        players[id].x = players[id].startX
-        players[id].y = players[id].startY
-        players[id].screen = players[id].startScreen
-        players[id].hasMoved = false
-        io.emit('pacman-death', player)
-        io.emit('update-players-info', players)
+        try {
+            console.log('Reseting pacman:', player)
+            const id = player.id
+            players[id].lives--
+            players[id].direction = player.direction
+            players[id].x = players[id].startX
+            players[id].y = players[id].startY
+            players[id].screen = players[id].startScreen
+            players[id].hasMoved = false
+            io.emit('pacman-death', player)
+            io.emit('update-players-info', players)
 
-        if(players[id].lives <= 0) {
-            io.emit('pacman-to-ghost', players[id])
+            if (players[id].lives <= 0) {
+                io.emit('pacman-to-ghost', players[id])
+            }
+        } catch (err) {
+            console.log('Error on resetPacman method:', err)
         }
     }
     socket.on('pacman-death', resetPacman)
@@ -133,30 +167,56 @@ io.on('connect', socket => {
      * Reset Ghost method -> responsible for emitting to all sockets to reset player information and removing one life
      * @param {Object} player indicates reset player object
      */
-     function resetGhost(player) {
-        const id = player.id
-        players[id].direction = player.direction
-        players[id].x = players[id].startX
-        players[id].y = players[id].startY
-        players[id].screen = players[id].startScreen
-        players[id].hasMoved = false
-        io.emit('ghost-death', player)
-        io.emit('update-players-info', players)
+    function resetGhost(player) {
+        try {
+            console.log('Reseting ghost:', player)
+            const id = player.id
+            players[id].direction = player.direction
+            players[id].x = players[id].startX
+            players[id].y = players[id].startY
+            players[id].screen = players[id].startScreen
+            players[id].hasMoved = false
+            io.emit('ghost-death', player)
+            io.emit('update-players-info', players)
+        } catch (err) {
+            console.log('Error on resetGhost method:', err)
+        }
     }
     socket.on('ghost-death', resetGhost)
 
     // emit hide text to all sockets
-    socket.on('hide-initial-text', () => io.emit('hide-initial-text'))
+    function onHideInitialText() {
+        try {
+            console.log('Hide initial text!')
+            io.emit('hide-initial-text')
+        } catch (err) {
+            console.log('Error on onHideInitialText method:', err)
+        }
+    }
+    socket.on('hide-initial-text', onHideInitialText)
 
     // emit allow game start to all sockets
-    socket.on('allow-game-start', () => io.emit('allow-game-start'))
+    function onAllowGameStart() {
+        try {
+            console.log('Allow game start!')
+            io.emit('allow-game-start')
+        } catch (err) {
+            console.log('Error on onAllowGameStart method:', err)
+        }
+    }
+    socket.on('allow-game-start', onAllowGameStart)
 
     /**
      * Play Audio method -> responsible for emitting specific audio to play
      * @param {String} name name of the audio to be played
      */
     function playAudio(name) {
-        io.emit('play-audio', name)
+        try {
+            console.log('Play audio:', name)
+            io.emit('play-audio', name)
+        } catch (err) {
+            console.log('Error on playAudio method:', err)
+        }
     }
     socket.on('play-audio', playAudio)
 
@@ -165,7 +225,12 @@ io.on('connect', socket => {
      * @param {String} name name of the audio to be played
      */
     function playUniqueAudio(name) {
-        io.emit('play-unique-audio', name)
+        try {
+            console.log('Play unique audio:', name)
+            io.emit('play-unique-audio', name)
+        } catch (err) {
+            console.log('Error on playUniqueAudio method:', err)
+        }
     }
     socket.on('play-unique-audio', playUniqueAudio)
 
@@ -174,22 +239,37 @@ io.on('connect', socket => {
      * @param {Number} screen number of the screen where all foods were eaten
      */
     function setFoodsEaten(screen) {
-        io.emit('set-foods-eaten', screen)
+        try {
+            console.log(`Set all foods eaten on screen ${screen}!`)
+            io.emit('set-foods-eaten', screen)
+        } catch (err) {
+            console.log('Error on setFoodsEaten method:', err)
+        }
     }
     socket.on('set-foods-eaten', setFoodsEaten)
 
     /**
      * On game end method -> emit to all sockets that game has ended
-     * @param {Boolean} victory boolean responsible for defining victory (true) or loss (false)
+     * @param {String} winner player type indicating if pacmans or ghosts won 
      */
-    function onGameEnd(victory) {
-        io.emit('game-end', victory)
+    function onGameEnd(winner) {
+        try {
+            console.log('On game end, winners:', winner)
+            io.emit('game-end', winner)
+        } catch (err) {
+            console.log('Error on onGameEnd method:', err)
+        }
     }
     socket.on('game-end', onGameEnd)
 
     // On restart game method -> Emit to all sockets to restart game with new player
     function onRestartGame() {
-        io.emit('restart-game')
+        try {
+            console.log('Restarting game...')
+            io.emit('restart-game')
+        } catch (err) {
+            console.log('Error on onRestartGame method:', err)
+        }
     }
     socket.on('restart-game', onRestartGame)
 
@@ -198,7 +278,12 @@ io.on('connect', socket => {
      * @param {String} name name of the audio to be stopped
      */
     function stopAudio(name) {
-        io.emit('stop-audio', name)
+        try {
+            console.log('Stop audio:', name)
+            io.emit('stop-audio', name)
+        } catch (err) {
+            console.log('Error on stopAudio method:', err)
+        }
     }
     socket.on('stop-audio', stopAudio)
 
@@ -206,9 +291,14 @@ io.on('connect', socket => {
      * On powerup finish method -> responsible for switching siren sounds
      */
     function onPowerUpFinish(playerId) {
-        io.emit('stop-audio', 'powerSiren')
-        io.emit('play-audio', 'siren')
-        io.emit('set-powerup', { value: false, playerId })
+        try {
+            console.log("Powerup finished:", playerId)
+            io.emit('stop-audio', 'powerSiren')
+            io.emit('play-audio', 'siren')
+            io.emit('set-powerup', { value: false, playerId })
+        } catch (err) {
+            console.log('Error on onPowerUpFinish method:', err)
+        }
     }
 
     /**
@@ -216,15 +306,20 @@ io.on('connect', socket => {
      * @param {Object} payload payload object containing value key (boolean containing isPoweredUp status) and durattion key with powerup duration
      */
     function onSetPowerup(payload) {
-        if (payload.value == true) {
-            if (powerUpTimeout) {
-                // if already powered up
-                io.emit('stop-audio', 'powerSiren') //stop current sound before starting again
-                clearTimeout(powerUpTimeout)
+        try {
+            console.log("Set powerup:", payload)
+            if (payload.value == true) {
+                if (powerUpTimeout) {
+                    // if already powered up
+                    io.emit('stop-audio', 'powerSiren') //stop current sound before starting again
+                    clearTimeout(powerUpTimeout)
+                }
+                io.emit('stop-audio', 'siren')
+                io.emit('play-audio', 'powerSiren')
+                powerUpTimeout = setTimeout(onPowerUpFinish, payload.duration, payload.playerId)
             }
-            io.emit('stop-audio', 'siren')
-            io.emit('play-audio', 'powerSiren')
-            powerUpTimeout = setTimeout(onPowerUpFinish, payload.duration, payload.playerId)
+        } catch (err) {
+            console.log('Error on onSetPowerup method:', err)
         }
     }
     socket.on('set-powerup', onSetPowerup)
