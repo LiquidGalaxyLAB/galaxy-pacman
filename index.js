@@ -150,6 +150,7 @@ io.on('connect', socket => {
             players[id].x = players[id].startX
             players[id].y = players[id].startY
             players[id].screen = players[id].startScreen
+            players[id].currentMap = players[id].startScreen == 1 ? 'master': 'slave'
             players[id].hasMoved = false
             io.emit('pacman-death', player)
             io.emit('update-players-info', players)

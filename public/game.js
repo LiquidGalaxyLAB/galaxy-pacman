@@ -43,6 +43,7 @@ let currentMap = MASTER_MAP_LAYOUT //default to master map
 var players = {}; // object containing players information. the object key is the id of the players constroller socket
 var centerText = document.getElementById('center-text')
 var allowGameStart = false
+var shouldEmitAllowGameStart = true
 var gameOver = false
 var availableFoods = 0
 
@@ -160,6 +161,7 @@ socket.on('pacman-to-ghost', pacmanToGhost)
  */
 function onGameStart() {
 	allowGameStart = true
+	shouldEmitAllowGameStart = true
 }
 socket.on('allow-game-start', onGameStart)
 
@@ -278,6 +280,7 @@ function onGameRestart() {
 	gameOver = false
 	centerText.style = 'display: none'
 	allowGameStart = false
+	shouldEmitAllowGameStart = true
 
 	// redraw map
 	createGrid(currentMap)
@@ -307,9 +310,11 @@ var defaultGhosts = []
 // Draw function -> draw objects on canvas
 function draw() {
 	if (screenNumber == 1) {
+		shouldEmitAllowGameStart = allowGameStart !== AudioController.gameStartSoundFinished // should only emit if value is different
 		allowGameStart = AudioController.gameStartSoundFinished
-		if (allowGameStart) {
+		if (allowGameStart && shouldEmitAllowGameStart) {
 			socket.emit('allow-game-start')
+			shouldEmitAllowGameStart = false // set to false because already emited
 		}
 	}
 	//clear before redrawing (important to reset transform before drawing)
@@ -341,11 +346,13 @@ function draw() {
 					if (!pacman.isPoweredUp) {
 						players[pacmanId].direction = DIRECTIONS.STOP
 						players[pacmanId].screen = players[pacmanId].startScreen
+						players[pacmanId].currentMap = players[pacmanId].startScreen == 1 ? 'master': 'slave'
 						players[pacmanId].x = players[pacmanId].startX
 						players[pacmanId].y = players[pacmanId].startY
 						players[pacmanId].lives--
 						pacman.x = players[pacmanId].startX
 						pacman.y = players[pacmanId].startY
+						pacman.shouldUpdate = true
 						players[pacmanId].hasMoved = false
 						socket.emit('pacman-death', players[pacmanId])
 						socket.emit('play-audio', 'death')
@@ -372,10 +379,12 @@ function draw() {
 
 						players[pacmanId].direction = DIRECTIONS.STOP
 						players[pacmanId].screen = players[pacmanId].startScreen
+						players[pacmanId].currentMap = players[pacmanId].startScreen == 1 ? 'master': 'slave'
 						players[pacmanId].x = players[pacmanId].startX
 						players[pacmanId].y = players[pacmanId].startY
 						pacman.x = players[pacmanId].startX
 						pacman.y = players[pacmanId].startY
+						pacman.shouldUpdate = true
 						players[pacmanId].hasMoved = false
 						socket.emit('pacman-death', players[pacmanId])
 						socket.emit('play-audio', 'death')
