@@ -6,18 +6,16 @@ The Pac-man game will be a multiplayer and multiscreen remake with a few new fun
 
 ## Before Running
 - Make sure Node.js version 14 is installed on the master machine, if necessary use the following link for tips on how to install it:
-[How To Install Node.js on Ubuntu 16.04](https://tecadmin.net/install-latest-nodejs-npm-on-ubuntu/)
+[How To Install Node.js on Ubuntu 16.04.](https://tecadmin.net/install-latest-nodejs-npm-on-ubuntu/)
 
-- Make sure Chromium Browser is installed on all machines
-
-- Make sure port 8128 is open
+- Make sure Chromium Browser is installed on all machines.
 
 ## Running Project For The Liquid Galaxy
-After cloning the repository in the master machine navigate to the cloned folder and install all dependencies by runing:
+After cloning the repository in the master machine navigate to the cloned folder and execute the installation script by running the following commands:
 ```bash
 cd galaxy-pacman
 
-npm install
+sudo bash install.sh
 ```
 
 Once the installation is finished you can run the project by running the command:
@@ -31,7 +29,9 @@ With the server running, open the game by executing the open script with:
 bash ./Bash/open-pacman.sh
 ```
 
-Once the screens are open, you can open the controller on any browser with the url {masterIp}:8128/controller, where **masterIp** is the IPv4 of the master machine
+Once the screens are open, you can open the controller on any browser with the url **masterIp**:8128/controller, where **masterIp** is the IPv4 of the master machine.
+
+If you experience any problems, check the installation logs for any possible errors in the logs folder, there will be a file with the date of installation as it's name.
 
 ## Running Project Locally
 After cloning the repository navigate to the cloned folder and install all dependencies by runing:
@@ -47,6 +47,8 @@ npm run server 5
 ```
 Here you can change the number 5 to any amount of screens that you wish, if you don't give a number it will default to 5!
 
-With the server running, the game is going to be available in the 8128 port, to open a game screen use the url: localhost:8128/{screen}, where screen is the number of the screen you want, i.e. screen 1 will be localhost:8128/1
+With the server running, the game is going to be available in the 8128 port, to open a game screen use the url: localhost:8128/{screen}, where screen is the number of the screen you want, e.g. screen 1 will be localhost:8128/1.
 
-Once the screens are open, you can open the controller on any browser with the url localhost:8128/controller
+Once the screens are open, you can open the controller on any browser with the url localhost:8128/controller.
+
+If you experience any problems, check the installation logs for any possible errors in the logs folder, there will be a file with the date of installation as it's name.
