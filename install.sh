@@ -20,6 +20,8 @@ RESULT=$LINE",8128"
 DATA=`cat /etc/iptables.conf | grep "tcp" | grep "8111" | grep "8128"`
 
 if [ "$DATA" == "" ]; then
+    time=$(date +%H:%M:%S)
+    echo "[$time] Port 8128 not open, opening port..." | tee -a ./logs/$filename
     sudo sed -i "s/$LINE/$RESULT/g" /etc/iptables.conf 2>> ./logs/$filename
 else
     time=$(date +%H:%M:%S)
@@ -35,9 +37,18 @@ npm install 2>> ./logs/$filename
 pm2 delete PACMAN_PORT:8128 2> /dev/null
 
 # Start server
+time=$(date +%H:%M:%S)
+echo "[$time] Starting pm2..." | tee -a ./logs/$filename
 pm2 start index.js --name PACMAN_PORT:8128 2>> ./logs/$filename
 
 pm2 save 2>> ./logs/$filename
 
 time=$(date +%H:%M:%S)
-echo "[$time] Installation complete." | tee -a ./logs/$filename
+echo "[$time] Installation complete. Reboot machine to finish installation" | tee -a ./logs/$filename
+
+read -p "Do you want to reboot your machine now? [Y/n]: " yes
+
+if [[ $yes =~ ^[Yy]$ ]]
+then
+  reboot
+fi
