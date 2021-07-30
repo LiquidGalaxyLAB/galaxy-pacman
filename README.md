@@ -18,14 +18,10 @@ cd galaxy-pacman
 sudo bash install.sh
 ```
 
-Once the installation is finished you can run the project by running the command:
+After the game is installed make sure to reboot your machine! Once it is done rebooting, the game can be opened by executing the open script in the galaxy-pacman directory with:
 ```bash
-npm run server 5
-```
-Here you can change the number 5 to any amount of screens that you wish, if you don't give a number it will default to 5!
+cd galaxy-pacman
 
-With the server running, open the game by executing the open script with:
-```bash
 bash ./Bash/open-pacman.sh
 ```
 
