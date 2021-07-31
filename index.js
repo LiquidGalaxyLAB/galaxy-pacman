@@ -324,6 +324,14 @@ io.on('connect', socket => {
         }
     }
     socket.on('set-powerup', onSetPowerup)
+
+    /**
+     * On next frame method -> emit to all sockets to go to next frame (used for debug mode)
+     */
+    function onNextFrame() {
+        io.emit('next-frame')
+    }
+    socket.on('next-frame', onNextFrame)
 })
 
 http.listen(port, () => {

@@ -1,4 +1,4 @@
-import { DIRECTIONS, PACMAN_LIVES, PLAYERTYPES } from "../consts.js"
+import { DEBUG_MODE, DEBUG_PLAYER_SPAWN, DIRECTIONS, PACMAN_LIVES, PLAYERTYPES } from "../consts.js"
 var socket = io()
 let nScreens; // variable will be set to have total number of screens in screenSetup method
 
@@ -69,7 +69,7 @@ ghostJoinButton.addEventListener('click', onGhostJoin)
 function onNewPlayer() {
     newPlayer.name = playerNameInput.value
     newPlayer.id = socket.id
-    newPlayer.screen = Math.floor(Math.random() * nScreens) + 1 //random screen from 1 to number of screens
+    newPlayer.screen = DEBUG_MODE ? DEBUG_PLAYER_SPAWN.screen : Math.floor(Math.random() * nScreens) + 1 //random screen from 1 to number of screens (debug mode is fixed screen)
     newPlayer.startScreen = newPlayer.screen
     newPlayer.currentMap = newPlayer.screen == 1 ? 'master' : 'slave'
     socket.emit('new-player', newPlayer)

@@ -17,6 +17,9 @@ import {
 	PLAYERTYPES,
 	PACMANEAT_SCORE_VALUE,
 	GHOST_DEATH_SCORE_LOSS,
+	DEBUG_MODE,
+	DEBUG_GHOST_SPAWN,
+	DEBUG_PLAYER_SPAWN,
 } from "./consts.js"
 import WallBlock from "./models/WallBlock.js";
 import Pacman from "./models/Pacman.js"
@@ -60,13 +63,16 @@ function screenSetup(screen) {
 	currentMap = screenNumber == 1 ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
 
 	centerText.innerHTML = `${screenNumber == 1 ? 'PRESS SPACE TO START' : ''}`
-	window.addEventListener('keydown', e => {
+
+	function keydownHandler(e) {
 		if (e.code == 'Space') {
+			window.removeEventListener('keydown', keydownHandler)
 			centerText.style = "display: none"
 			AudioController.play('gameStart')
 			socket.emit('hide-initial-text')
 		}
-	})
+	}
+	window.addEventListener('keydown', keydownHandler)
 
 	// initialize all foods eaten as false on all screens
 	for (let i = 1; i <= nScreens; i++) {
@@ -267,6 +273,16 @@ function onSetPowerup(payload) {
 socket.on('set-powerup', onSetPowerup)
 
 /**
+ * On next frame method -> emit to all sockets to go to next frame (used for debug mode)
+ */
+function onNextFrame() {
+	if (screenNumber !== 1) {
+		requestAnimationFrame(draw)
+	}
+}
+socket.on('next-frame', onNextFrame)
+
+/**
  * On Game Restart method -> responsible for restarting all variables and recreating grid
  */
 function onGameRestart() {
@@ -315,6 +331,10 @@ function draw() {
 		if (allowGameStart && shouldEmitAllowGameStart) {
 			socket.emit('allow-game-start')
 			shouldEmitAllowGameStart = false // set to false because already emited
+
+			if (DEBUG_MODE) {
+				startDebugMode()
+			}
 		}
 	}
 	//clear before redrawing (important to reset transform before drawing)
@@ -346,7 +366,7 @@ function draw() {
 					if (!pacman.isPoweredUp) {
 						players[pacmanId].direction = DIRECTIONS.STOP
 						players[pacmanId].screen = players[pacmanId].startScreen
-						players[pacmanId].currentMap = players[pacmanId].startScreen == 1 ? 'master': 'slave'
+						players[pacmanId].currentMap = players[pacmanId].startScreen == 1 ? 'master' : 'slave'
 						players[pacmanId].x = players[pacmanId].startX
 						players[pacmanId].y = players[pacmanId].startY
 						players[pacmanId].lives--
@@ -379,7 +399,7 @@ function draw() {
 
 						players[pacmanId].direction = DIRECTIONS.STOP
 						players[pacmanId].screen = players[pacmanId].startScreen
-						players[pacmanId].currentMap = players[pacmanId].startScreen == 1 ? 'master': 'slave'
+						players[pacmanId].currentMap = players[pacmanId].startScreen == 1 ? 'master' : 'slave'
 						players[pacmanId].x = players[pacmanId].startX
 						players[pacmanId].y = players[pacmanId].startY
 						pacman.x = players[pacmanId].startX
@@ -508,7 +528,9 @@ function draw() {
 
 	if (SHOW_STATUS) stats.update();
 
-	requestAnimationFrame(draw)
+	if (!DEBUG_MODE || !allowGameStart) {
+		requestAnimationFrame(draw)
+	}
 }
 
 // Clear canvas -> fill canvas with black rectangle
@@ -568,14 +590,24 @@ function createPacman(player) {
 
 	if (screenNumber == player.screen) {
 		//set food to eaten
-		blocks[availablePositions[randomIndex].i][availablePositions[randomIndex].j].wasEaten = true
-		availableFoods--;
+		if (DEBUG_MODE) {
+			blocks[DEBUG_PLAYER_SPAWN.row][DEBUG_PLAYER_SPAWN.col].wasEaten = true
+			availableFoods--;
+		} else {
+			blocks[availablePositions[randomIndex].i][availablePositions[randomIndex].j].wasEaten = true
+			availableFoods--;
+		}
 
 		//create pacman
 
 		// get random coordinates
-		const x = availablePositions[randomIndex].j * BLOCK_SIZE
-		const y = availablePositions[randomIndex].i * BLOCK_SIZE
+		let x = availablePositions[randomIndex].j * BLOCK_SIZE
+		let y = availablePositions[randomIndex].i * BLOCK_SIZE
+
+		if (DEBUG_MODE) {
+			x = DEBUG_PLAYER_SPAWN.col * BLOCK_SIZE
+			y = DEBUG_PLAYER_SPAWN.row * BLOCK_SIZE
+		}
 
 		// adapt based on screen
 		let isRightScreen = player.screen <= (Math.ceil(nScreens / 2));
@@ -627,8 +659,15 @@ function createGhost(player) {
 		randomIndex = Math.floor(Math.random() * availablePositions.length)
 
 		//create ghost
-		const x = availablePositions[randomIndex].j * BLOCK_SIZE
-		const y = availablePositions[randomIndex].i * BLOCK_SIZE
+		let x = availablePositions[randomIndex].j * BLOCK_SIZE
+		let y = availablePositions[randomIndex].i * BLOCK_SIZE
+
+		if (DEBUG_MODE) {
+			// debug mode always spawn
+			x = DEBUG_GHOST_SPAWN.col * BLOCK_SIZE
+			y = DEBUG_GHOST_SPAWN.row * BLOCK_SIZE
+		}
+
 		defaultGhosts.push(new Ghost(x, y, color));
 	} else {
 		randomIndex = Math.floor(Math.random() * availablePositions.length)
@@ -637,8 +676,13 @@ function createGhost(player) {
 			//create ghost
 
 			// get random coordinates
-			const x = availablePositions[randomIndex].j * BLOCK_SIZE
-			const y = availablePositions[randomIndex].i * BLOCK_SIZE
+			let x = availablePositions[randomIndex].j * BLOCK_SIZE
+			let y = availablePositions[randomIndex].i * BLOCK_SIZE
+
+			if (DEBUG_MODE) {
+				x = DEBUG_PLAYER_SPAWN.col * BLOCK_SIZE
+				y = DEBUG_PLAYER_SPAWN.row * BLOCK_SIZE
+			}
 
 			// adapt based on screen
 			let isRightScreen = player.screen <= (Math.ceil(nScreens / 2));
@@ -723,11 +767,9 @@ function setupScoreboard() {
 
 	// get all players scores
 	let playersAux = [], playersScores = [];
-	let index = 0
 	for (const id in players) {
 		playersAux.push({ score: players[id].score, id, name: players[id].name, color: players[id].color });
 		playersScores.push(players[id].score)
-		index++
 	}
 
 	for (let index = 0; index < 3 && index < Object.keys(players).length; index++) {
@@ -779,4 +821,16 @@ function checkPlayerScreen(playerId) {
 
 		socket.emit('update-players-info', players[playerId])
 	}
+}
+
+/**
+ * Start debug mode method -> add event listener for requesting next frame and emitting to other sockets
+ */
+function startDebugMode() {
+	window.addEventListener('keydown', e => {
+		if (e.code == "Space") {
+			requestAnimationFrame(draw)
+			socket.emit('next-frame')
+		}
+	})
 }

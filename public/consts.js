@@ -36,6 +36,19 @@ export const LAIR_DOOR_COLOR = "#edd237"
 export const PACMANEAT_SCORE_VALUE = 300
 // amount that is removed from ghost score everytime they get eaten by a pacman
 export const GHOST_DEATH_SCORE_LOSS = 400
+// Boolean indicating if game is in debug mode or not
+export const DEBUG_MODE = false
+// Player spawn on debug mode
+export const DEBUG_PLAYER_SPAWN = {
+  row: 9,
+  col: 4,
+  screen: 1,
+}
+// Default Ghosts spawn on debug mode
+export const DEBUG_GHOST_SPAWN = {
+  row: 4,
+  col: 4
+}
 
 
 // Direction constants (used for indicating direction of players)

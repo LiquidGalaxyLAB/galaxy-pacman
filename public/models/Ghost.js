@@ -1,4 +1,4 @@
-import { BLOCK_SIZE, DIRECTIONS, PLAYER_SPEED_DIVIDER, ENTITIES } from "../consts.js"
+import { BLOCK_SIZE, DIRECTIONS, PLAYER_SPEED_DIVIDER, ENTITIES, DEBUG_MODE } from "../consts.js"
 import Player from "./Player.js"
 
 /**
@@ -136,8 +136,14 @@ class Ghost extends Player {
                 (this.direction == DIRECTIONS.RIGHT && (right == ENTITIES.WALL || right == ENTITIES.TELEPORTER))
             ) {
                 // If next block is wall get new random direction for ghost
-                this.direction = this.getRandomDirection({ above, below, right, left }) // stop
-                this.facing = this.direction
+                if (!DEBUG_MODE) {
+                    this.direction = this.getRandomDirection({ above, below, right, left })
+                    this.facing = this.direction
+                } else {
+                    // debug mode stops at wall
+                    this.direction = DIRECTIONS.STOP
+                    this.facing = this.direction
+                }
             }
 
             switch (this.direction) {
