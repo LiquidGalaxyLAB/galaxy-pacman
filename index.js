@@ -1,8 +1,14 @@
 // Server initialization
-var express = require('express');
+import express from 'express'
 var app = express();
-var http = require('http').createServer(app);
-var io = require('socket.io')(http);
+import httpImport from 'http'
+var http = httpImport.createServer(app);
+import socketio from 'socket.io'
+var io = socketio(http);
+
+import path from 'path';
+const __dirname = path.resolve();
+
 const port = 8128;
 
 // Setup files to be sent on connection

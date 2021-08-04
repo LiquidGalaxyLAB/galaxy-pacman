@@ -710,7 +710,7 @@ function createGhost(player) {
 
 /**
  * Is Game Over method -> Check if game is over
- * @param {Object} player player object containing amount of lives and other info
+ * @returns {Boolean} true if game should be over, false if should keep going
  */
 function isGameOver() {
 	// check if there are still pacman alive
@@ -804,6 +804,10 @@ function setupScoreboard() {
 	}
 }
 
+/**
+ * Check Player Screen Method -> Check/update player screen based on horizontal position
+ * * @param {String} playerId player socket id
+ */
 function checkPlayerScreen(playerId) {
 	let width = window.innerWidth
 	let x = players[playerId].x
