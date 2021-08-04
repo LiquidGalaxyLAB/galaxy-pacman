@@ -1,6 +1,27 @@
 import chai from 'chai'
 const expect = chai.expect
 
+// Audio controller for testing
+const AudioController = {
+    play: function (name) {
+        // available sounds
+        const sounds = {
+            siren: '',
+            powerSiren: '',
+            gameStart: '',
+            munch: '',
+            death: '',
+            eatGhost: ''
+        }
+
+        if (sounds[name] == undefined) {
+            return 'error'
+        }
+
+        return 'ok'
+    }
+}
+
 /**
  * Is Game Over method -> Check if game is over
  * @param {Array} pacmans array containing pacmans
@@ -135,3 +156,39 @@ describe('checkPlayerScreen method', function () {
         })
     })
 })
+
+/**
+ * Play Audio method -> responsible for playing audio based on name
+ * @param {String} name name of the audio to be played
+ */
+function playAudio(name) {
+    return AudioController.play(name)
+}
+
+describe('playAudio method', function () {
+    let audioName
+    describe('Sound exists', function () {
+        it('Play siren sound', function () {
+            audioName = 'siren'
+            expect(playAudio(audioName)).to.equal('ok')
+        })
+
+        it('Play munch sound', function () {
+            audioName = 'munch'
+            expect(playAudio(audioName)).to.equal('ok')
+        })
+    })
+
+    describe("Sound doesn't exist", function () {
+        it('Play naruto sound', function () {
+            audioName = 'naruto'
+            expect(playAudio(audioName)).to.equal('error')
+        })
+
+        it('Play sasuke sound', function () {
+            audioName = 'sasuke'
+            expect(playAudio(audioName)).to.equal('error')
+        })
+    })
+})
+
