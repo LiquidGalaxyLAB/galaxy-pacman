@@ -352,7 +352,6 @@ function draw() {
 		//draw each pacman
 		pacmans.forEach(function (pacman) {
 			const pacmanId = pacman.id
-			checkPlayerScreen(pacmanId)
 			if (allowGameStart) pacman.updatePosition(players[pacmanId].direction, screenNumber, nScreens, players[pacmanId])
 			else pacman.updateFixedPosition(screenNumber, nScreens, players[pacmanId])
 			const pacmanPos = pacman.getRowCol()
@@ -486,6 +485,9 @@ function draw() {
 					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: pacmanId })
 				}
 			}
+			
+			// check screen before updating
+			checkPlayerScreen(pacmanId)
 
 			// emit player position to all screens
 			if (screenNumber == 1 && pacman.shouldUpdate) {
@@ -805,8 +807,13 @@ function setupScoreboard() {
 }
 
 function checkPlayerScreen(playerId) {
-	let width = window.innerWidth
-	let x = players[playerId].x
+	const width = window.innerWidth
+	const x = players[playerId].x
+	// get edge screens
+	// screen most to the right
+	const rightScreen = Math.ceil(nScreens / 2)
+	// screen most to the left
+	const leftScreen = rightScreen + 1
 	let screen
 
 	if (x >= 0) {
@@ -816,10 +823,23 @@ function checkPlayerScreen(playerId) {
 	}
 
 	if (players[playerId].screen !== screen) {
+		// if teleporting between edge screens
+		if (players[playerId].screen == rightScreen && screen == leftScreen) {
+			// teleport from right to left
+			const isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+			const offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+			const tpX = ((GRID_WIDTH) * BLOCK_SIZE) * offsetIndex
+			players[playerId].x = tpX + 1
+		} else if (players[playerId].screen == leftScreen && screen == rightScreen) {
+			// teleport from left to right
+			const isRightScreen = screen <= (Math.ceil(nScreens / 2)); //true if screen is master or on its right, false if screen is on master's left
+			const offsetIndex = isRightScreen ? screen - 1 : ((nScreens + 1) - screen) * -1; //offsetIndex is always negative for screens on left.
+			const tpX = ((GRID_WIDTH) * BLOCK_SIZE) * (offsetIndex + 1)
+			players[playerId].x = tpX - 1
+		}
+
 		players[playerId].screen = screen
 		players[playerId].currentMap = screen == 1 ? 'master' : 'slave'
-
-		socket.emit('update-players-info', players[playerId])
 	}
 }
 
