@@ -64,17 +64,5 @@ export default {
             if (sounds[key].playing()) sounds[key].stop()
         })
     },
-    /**
-     * Switch Siren method -> switch sirens between default siren and powerup siren
-     */
-    switchSiren() {
-        if (sounds.siren.playing()) {
-            sounds.siren.stop()
-            sounds.powerSiren.play()
-        } else {
-            sounds.powerSiren.stop()
-            sounds.siren.play()
-        }
-    },
 }
 

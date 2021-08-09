@@ -36,17 +36,6 @@ class Player {
     }
 
     /**
-     * Is player on screen method -> responsible for deciding if player is or is not on screen
-     * @returns {Boolean} true if player is on screen, false if player is not on screen
-     */
-    isPlayerOnScreen() {
-        let width = window.innerWidth
-        if (this.x >= 0 && this.x <= width) return true
-
-        return false
-    }
-
-    /**
      * Get row and column method
      * @returns {Object} object with attributes 'row' as the index of current row and 'col' as the index of current column
      */

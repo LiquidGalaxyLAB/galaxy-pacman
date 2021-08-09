@@ -1,4 +1,4 @@
-import { BLOCK_SIZE, PLAYER_SPEED_DIVIDER, DIRECTIONS, ENTITIES, MASTER_MAP_LAYOUT, SLAVE_MAP_LAYOUT } from "../consts.js"
+import { DIRECTIONS } from "../consts.js"
 import Player from "./Player.js"
 
 /**
@@ -61,46 +61,6 @@ class Pacman extends Player {
         ctx.fillStyle = this.isPoweredUp ? 'white' : this.color;
         ctx.fill();
     }
-
-    /**
-     * Update positionm method -> update player move cycle for animation and after animation is complete update position based on direction
-     */
-    // updatePosition() {
-    //     switch (this.direction) {
-    //         case DIRECTIONS.UP: // up
-    //             this.verticalMoveCycle -= this.speed
-    //             break;
-    //         case DIRECTIONS.DOWN: // down
-    //             this.verticalMoveCycle += this.speed
-    //             break;
-    //         case DIRECTIONS.LEFT: // left
-    //             this.horizontalMoveCycle -= this.speed
-    //             break;
-    //         case DIRECTIONS.RIGHT: // right
-    //             this.horizontalMoveCycle += this.speed
-    //             break;
-    //     }
-
-    //     if ((this.moveInterval == PLAYER_SPEED_DIVIDER - 1 || this.direction == DIRECTIONS.STOP)) {
-    //         this.verticalMoveCycle = 0
-    //         this.horizontalMoveCycle = 0
-            
-    //         switch (this.direction) {
-    //             case DIRECTIONS.UP: // up
-    //                 this.y -= BLOCK_SIZE
-    //                 break;
-    //             case DIRECTIONS.DOWN: // down
-    //                 this.y += BLOCK_SIZE
-    //                 break;
-    //             case DIRECTIONS.LEFT: // left
-    //                 this.x -= BLOCK_SIZE
-    //                 break;
-    //             case DIRECTIONS.RIGHT: // right
-    //                 this.x += BLOCK_SIZE
-    //                 break;
-    //         }
-    //     }
-    // }
 }
 
 export default Pacman;

@@ -112,6 +112,11 @@ function onPlayerDeath(pl) {
 }
 socket.on('pacman-death', onPlayerDeath)
 
+function onGameRestart() {
+    window.location.reload()
+}
+socket.on('restart-game', onGameRestart)
+
 /**
  * On game end method -> set controller screen based on victory or loss
  * @param {String} winners player type indicating if pacmans or ghosts won
