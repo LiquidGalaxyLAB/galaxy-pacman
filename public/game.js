@@ -62,17 +62,7 @@ function screenSetup(screen) {
 	nScreens = screen.nScreens;
 	currentMap = screenNumber == 1 ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
 
-	centerText.innerHTML = `${screenNumber == 1 ? 'PRESS SPACE TO START' : ''}`
-
-	function keydownHandler(e) {
-		if (e.code == 'Space') {
-			window.removeEventListener('keydown', keydownHandler)
-			centerText.style = "display: none"
-			AudioController.play('gameStart')
-			socket.emit('hide-initial-text')
-		}
-	}
-	window.addEventListener('keydown', keydownHandler)
+	centerText.innerHTML = `${screenNumber == 1 ? 'WAITING FOR PLAYERS' : ''}`
 
 	// initialize all foods eaten as false on all screens
 	for (let i = 1; i <= nScreens; i++) {
@@ -306,6 +296,13 @@ function onGameRestart() {
 	AudioController.play('gameStart')
 }
 socket.on('restart-game', onGameRestart)
+
+function onAllPlayersReady() {
+	centerText.style = "display: none"
+	AudioController.play('gameStart')
+	socket.emit('hide-initial-text')
+}
+socket.on('all-players-ready', onAllPlayersReady)
 
 // Get canvas element from index.html
 const canvas = document.getElementById('gameCanvas');

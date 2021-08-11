@@ -11,6 +11,9 @@ const pacmanJoinButton = document.getElementById('pick-pacman-btn')
 const ghostJoinButton = document.getElementById('pick-ghost-btn')
 const colorPickerContainer = document.getElementById('color-picker-container')
 const controllerConatiner = document.getElementById('controller-container')
+const waitingScreen = document.getElementById('waiting-screen')
+const readyButton = document.getElementById('ready-btn')
+const waitingText = document.getElementById('waiting-text')
 
 // setup lives counter
 const livesContainer = document.getElementById('lives-container')
@@ -38,6 +41,7 @@ var newPlayer = {
     isConnected: false,
     lives: PACMAN_LIVES,
     hasMoved: false,
+    ready: false,
 }
 
 /**
@@ -63,6 +67,13 @@ function onGhostJoin() {
 }
 ghostJoinButton.addEventListener('click', onGhostJoin)
 
+function setPlayerReady() {
+    readyButton.style = 'visibility: hidden'
+    waitingText.style = 'visibility: visible'
+    socket.emit('player-ready', socket.id)
+}
+readyButton.addEventListener('click', setPlayerReady)
+
 /**
  * On New Player method -> responsible for setting player object and emitting that a new player has connected
  */
@@ -74,9 +85,9 @@ function onNewPlayer() {
     newPlayer.currentMap = newPlayer.screen == 1 ? 'master' : 'slave'
     socket.emit('new-player', newPlayer)
 
-    //switch to controller
+    //switch to waiting screen
     colorPickerContainer.style = 'visibility: hidden'
-    controllerConatiner.style = 'visibility: visible'
+    waitingScreen.style = 'visibility: visible'
 }
 
 // socket functions/event listeners
@@ -139,6 +150,14 @@ function onGameEnd(winners) {
     centerText.style = "display: block"
 }
 socket.on('game-end', onGameEnd)
+
+function onGameStart() {
+    //switch to controller
+    waitingScreen.style = 'visibility: hidden'
+    waitingText.style = 'visibility: hidden'
+    controllerConatiner.style = 'visibility: visible'
+}
+socket.on('allow-game-start', onGameStart)
 
 // Controller setup
 const controllerOptions = {

@@ -335,6 +335,31 @@ io.on('connect', socket => {
     socket.on('next-frame', onNextFrame)
 
     /**
+     * On Player Ready Mehtod -> responsible for checking if all players are ready and emitting to all sockets when they are
+     * @param {String} id id of the player
+     */
+    function onPlayerReady(id) {
+        players[id].ready = true
+
+        let hasPlayerUnready = false
+        for(const id in players) {
+            console.log('potato', id)
+            if(players[id].ready == false) {
+                hasPlayerUnready = true
+            }
+        }
+
+        // emit to allow game start
+        if(!hasPlayerUnready) {
+            console.log('All players ready!')
+            io.emit('all-players-ready')
+        } else {
+            console.log('Waiting for other players...')
+        }
+    }
+    socket.on('player-ready', onPlayerReady)
+
+    /**
      * Sleep function -> used for making code wait for certain amount of time before doing something else
      * @param {Number} duration duration of sleep in milliseconds
      */
