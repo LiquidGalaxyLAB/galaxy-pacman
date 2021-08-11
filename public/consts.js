@@ -19,7 +19,7 @@ export const PLAYER_SPEED_DIVIDER = 15
 // Should show game status? -> true if you want to show status
 export const SHOW_STATUS = false
 // Should have ghost collision? only use false for testing purposes
-export const ENABLE_GHOST_COLLISION = false
+export const ENABLE_GHOST_COLLISION = true
 // amount that is added to player score everytime a food is eaten
 export const FOOD_SCORE_VALUE = 10
 // amount that is added to player score everytime they eat a ghost
