@@ -11,7 +11,12 @@ The Pac-man game will be a multiplayer and multiscreen remake with a few new fun
 - Make sure Chromium Browser is installed on all machines.
 
 ## Running Project For The Liquid Galaxy
-After cloning the repository in the master machine navigate to the cloned folder and execute the installation script by running the following commands:
+Firstly, clone the repository in the master machine with the command:
+```bash
+git clone https://github.com/LiquidGalaxyLAB/galaxy-pacman.git
+```
+
+Once the repository is cloned, navigate to the cloned folder and execute the installation script by running the following commands:
 ```bash
 cd galaxy-pacman
 
@@ -30,7 +35,12 @@ Once the screens are open, you can open the controller on any browser with the u
 If you experience any problems, check the installation logs for any possible errors in the logs folder, there will be a file with the date of installation as it's name.
 
 ## Running Project Locally
-After cloning the repository navigate to the cloned folder and install all dependencies by runing:
+Firstly, clone the repository in the master machine with the command:
+```bash
+git clone https://github.com/LiquidGalaxyLAB/galaxy-pacman.git
+```
+
+Once the repository is cloned, navigate to the cloned folder and execute the installation script by running the following commands:
 ```bash
 cd galaxy-pacman
 
