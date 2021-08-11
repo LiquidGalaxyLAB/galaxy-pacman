@@ -27,7 +27,6 @@ if (myArgs.length == 0 || isNaN(nScreens)) {
 }
 console.log(`Running Galalxy Pacman for Liquid Galaxy with ${nScreens} screens!`);
 var players = {};
-var powerUpTimeout
 
 
 app.use(express.static(__dirname + filePath))
@@ -312,18 +311,14 @@ io.on('connect', socket => {
      * On set powerup method -> responsible for emitting specific audio to stop
      * @param {Object} payload payload object containing value key (boolean containing isPoweredUp status) and durattion key with powerup duration
      */
-    function onSetPowerup(payload) {
+    async function onSetPowerup(payload) {
         try {
             console.log("Set powerup:", payload)
             if (payload.value == true) {
-                if (powerUpTimeout) {
-                    // if already powered up
-                    io.emit('stop-audio', 'powerSiren') //stop current sound before starting again
-                    clearTimeout(powerUpTimeout)
-                }
+                io.emit('stop-audio', 'powerSiren')
                 io.emit('stop-audio', 'siren')
                 io.emit('play-audio', 'powerSiren')
-                powerUpTimeout = setTimeout(onPowerUpFinish, payload.duration, payload.playerId)
+                await sleep(payload.duration).then(() => onPowerUpFinish(payload.playerId))
             }
         } catch (err) {
             console.log('Error on onSetPowerup method:', err)
@@ -338,6 +333,14 @@ io.on('connect', socket => {
         io.emit('next-frame')
     }
     socket.on('next-frame', onNextFrame)
+
+    /**
+     * Sleep function -> used for making code wait for certain amount of time before doing something else
+     * @param {Number} duration duration of sleep in milliseconds
+     */
+    function sleep(duration) {
+        return new Promise(resolve => setTimeout(resolve, duration))
+    }
 })
 
 http.listen(port, () => {
