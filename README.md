@@ -20,7 +20,7 @@ Once the repository is cloned, navigate to the cloned folder and execute the ins
 ```bash
 cd galaxy-pacman
 
-sudo bash install.sh
+bash install.sh
 ```
 
 After the game is installed make sure to reboot your machine! Once it is done rebooting, the game can be opened by executing the open script in the galaxy-pacman directory with:

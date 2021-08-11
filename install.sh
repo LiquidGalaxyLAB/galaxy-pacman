@@ -33,15 +33,18 @@ time=$(date +%H:%M:%S)
 echo "[$time] Installing dependencies..." | tee -a ./logs/$filename
 npm install 2>> ./logs/$filename
 
+# Add access for pm2
+sudo chown lg:lg /home/lg/.pm2/rpc.sock /home/lg/.pm2/pub.sock
+
 # Stop server if already started
-sudo pm2 delete PACMAN_PORT:8128 2> /dev/null
+pm2 delete PACMAN_PORT:8128 2> /dev/null
 
 # Start server
 time=$(date +%H:%M:%S)
 echo "[$time] Starting pm2..." | tee -a ./logs/$filename
-sudo pm2 start index.js --name PACMAN_PORT:8128 2>> ./logs/$filename
+pm2 start index.js --name PACMAN_PORT:8128 2>> ./logs/$filename
 
-sudo pm2 save 2>> ./logs/$filename
+pm2 save 2>> ./logs/$filename
 
 # Add automatic pm2 resurrect script
 time=$(date +%H:%M:%S)
