@@ -49,7 +49,7 @@ pm2 save 2>> ./logs/$filename
 # Add automatic pm2 resurrect script
 time=$(date +%H:%M:%S)
 echo "[$time] Updating resurrect script..." | tee -a ./logs/$filename
-RESURRECT=pm2 startup | grep 'sudo'
+RESURRECT=$(pm2 startup | grep 'sudo')
 eval $RESURRECT 2>> ./logs/$filename
 
 time=$(date +%H:%M:%S)
