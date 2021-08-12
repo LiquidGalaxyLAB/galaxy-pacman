@@ -10,6 +10,7 @@ filename="$date.txt"
 # Add to log with timestamp
 time=$(date +%H:%M:%S)
 echo "[$time] Installing Galaxy Pacman..." | tee -a ./logs/$filename
+read -p "Please type the number of screens in the Liquid Galaxy: " nScreens
 
 # Open port 8128
 
@@ -42,7 +43,7 @@ pm2 delete PACMAN_PORT:8128 2> /dev/null
 # Start server
 time=$(date +%H:%M:%S)
 echo "[$time] Starting pm2..." | tee -a ./logs/$filename
-pm2 start index.js --name PACMAN_PORT:8128 2>> ./logs/$filename
+pm2 start index.js --name PACMAN_PORT:8128 -- $nScreens 2>> ./logs/$filename
 
 pm2 save 2>> ./logs/$filename
 
