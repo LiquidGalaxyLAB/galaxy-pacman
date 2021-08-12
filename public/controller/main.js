@@ -70,6 +70,7 @@ ghostJoinButton.addEventListener('click', onGhostJoin)
 function setPlayerReady() {
     readyButton.style = 'visibility: hidden'
     waitingText.style = 'visibility: visible'
+    newPlayer.ready = true
     socket.emit('player-ready', socket.id)
 }
 readyButton.addEventListener('click', setPlayerReady)
@@ -87,6 +88,7 @@ function onNewPlayer() {
 
     //switch to waiting screen
     colorPickerContainer.style = 'visibility: hidden'
+    controllerConatiner.style = "visibility: hidden"
     waitingScreen.style = 'visibility: visible'
 }
 
@@ -153,11 +155,24 @@ socket.on('game-end', onGameEnd)
 
 function onGameStart() {
     //switch to controller
-    waitingScreen.style = 'visibility: hidden'
-    waitingText.style = 'visibility: hidden'
-    controllerConatiner.style = 'visibility: visible'
+    if(newPlayer.ready) {
+        waitingScreen.style = 'visibility: hidden'
+        waitingText.style = 'visibility: hidden'
+        colorPickerContainer.style = 'visibility: hidden'
+        controllerConatiner.style = 'visibility: visible'
+    }
 }
 socket.on('allow-game-start', onGameStart)
+
+function onAllPlayersReady() {
+    waitingText.innerHTML = "All players ready! Once the siren starts GO!!"
+}
+socket.on('all-players-ready', onAllPlayersReady)
+
+function onGameHasStarted() {
+    waitingText.innerHTML = "Game has already started! Please wait for the next game"
+}
+socket.on('show-game-has-started', onGameHasStarted)
 
 // Controller setup
 const controllerOptions = {

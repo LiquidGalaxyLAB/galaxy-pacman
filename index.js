@@ -27,6 +27,7 @@ if (myArgs.length == 0 || isNaN(nScreens)) {
 }
 console.log(`Running Galalxy Pacman for Liquid Galaxy with ${nScreens} screens!`);
 var players = {};
+var hasGameStarted = false
 
 
 app.use(express.static(__dirname + filePath))
@@ -44,7 +45,7 @@ app.get('/:id', (req, res) => {
 })
 
 // Socket listeners and functions
-io.on('connect', socket => {    
+io.on('connect', socket => {
     console.log(`User connected with id ${socket.id}`)
     socket.emit("new-screen", { number: Number(screenNumber), nScreens: nScreens }) //tell to load screen on local and its number  
 
@@ -55,9 +56,11 @@ io.on('connect', socket => {
     function onNewPlayer(newPl) {
         try {
             console.log('New player connected:', newPl)
-            players[socket.id] = newPl;
+            if (!hasGameStarted) {
+                players[socket.id] = newPl;
 
-            io.emit('update-players-object', players)
+                io.emit('update-players-object', players)
+            }
         } catch (err) {
             console.error('Error on onNewPlayer method:', err)
         }
@@ -155,7 +158,7 @@ io.on('connect', socket => {
             players[id].x = players[id].startX
             players[id].y = players[id].startY
             players[id].screen = players[id].startScreen
-            players[id].currentMap = players[id].startScreen == 1 ? 'master': 'slave'
+            players[id].currentMap = players[id].startScreen == 1 ? 'master' : 'slave'
             players[id].hasMoved = false
             io.emit('pacman-death', player)
             io.emit('update-players-info', players)
@@ -261,6 +264,7 @@ io.on('connect', socket => {
     function onGameEnd(winner) {
         try {
             console.log('On game end, winners:', winner)
+            hasGameStarted = false
             io.emit('game-end', winner)
         } catch (err) {
             console.log('Error on onGameEnd method:', err)
@@ -272,6 +276,7 @@ io.on('connect', socket => {
     function onRestartGame() {
         try {
             console.log('Restarting game...')
+            hasGameStarted = false
             io.emit('restart-game')
         } catch (err) {
             console.log('Error on onRestartGame method:', err)
@@ -339,22 +344,30 @@ io.on('connect', socket => {
      * @param {String} id id of the player
      */
     function onPlayerReady(id) {
-        players[id].ready = true
+        try {
+            if (!hasGameStarted) {
+                players[id].ready = true
 
-        let hasPlayerUnready = false
-        for(const id in players) {
-            console.log('potato', id)
-            if(players[id].ready == false) {
-                hasPlayerUnready = true
+                let hasPlayerUnready = false
+                for (const id in players) {
+                    if (players[id].ready == false) {
+                        hasPlayerUnready = true
+                    }
+                }
+
+                // emit to allow game start
+                if (!hasPlayerUnready) {
+                    console.log('All players ready!')
+                    io.emit('all-players-ready')
+                    hasGameStarted = true
+                } else {
+                    console.log('Waiting for other players...')
+                }
+            } else {
+                io.emit('show-game-has-started')
             }
-        }
-
-        // emit to allow game start
-        if(!hasPlayerUnready) {
-            console.log('All players ready!')
-            io.emit('all-players-ready')
-        } else {
-            console.log('Waiting for other players...')
+        } catch (err) {
+            console.log('Error on onPlayerReady methods:', err)
         }
     }
     socket.on('player-ready', onPlayerReady)
