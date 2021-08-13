@@ -5,7 +5,7 @@
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Galaxy Pacman Controller</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <style>
         @font-face {
             font-family: Retro;
@@ -20,7 +20,7 @@
             left: 50%;
             color: white;
             transform: translate(-50%, -50%);
-            font-size: 180%;
+            font-size: 5vh;
             font-family: Retro;
         }
 
@@ -40,6 +40,7 @@
             left: 5%;
             color: white;
             font-family: Retro;
+            font-size: 5vh;
         }
 
         .hint-text {
@@ -51,6 +52,7 @@
             color: white;
             transform: translate(-50%, -50%);
             font-family: Retro;
+            font-size: 5vh;
         }
 
         #lives-container {
@@ -61,15 +63,26 @@
 
         .custom-button {
             font-family: Retro;
-            border-radius: 8px;
+            font-size: 3vh;
+            border-radius: 20px;
             background-color: black;
             color: white;
+            padding: 10px;
+        }
+
+        .ready-button {
+            font-family: Retro;
+            font-size: 5vh;
+            border-radius: 30px;
+            background-color: black;
+            color: white;
+            padding: 10px;
         }
 
         .bottom-content {
             text-align: center;
             position: absolute;
-            top: 80%;
+            top: 85%;
             left: 50%;
             transform: translate(-50%, -50%);
         }
@@ -77,17 +90,18 @@
 </head>
 
 <body style="margin: 0; background-color: rgb(46, 46, 46); overflow-y: hidden;">
-    <div id="color-picker-container">
-        <div class="hint-text">Select the color for your player:</div>
+    <div id="color-picker-container" style="visibility: visible;">
+        <div class="hint-text" style="margin-top: 3%;">Select the color for your player:</div>
 
         <div class="center-content">
-            <label style="color: white; font-family: Retro;" for="color-picker">COLOR:</label>
-            <input id="color-picker" value="#FFFF00" type="color">
+            <label style="color: white; font-family: Retro; display: block; margin-bottom: 5%;" for="color-picker">COLOR:</label>
+            <input id="color-picker" style="height: 50px; width: 50px;" value="#FFFF00" type="color">
+
 
             <div style="margin-top: 10%;">
-                <label style="color: white; font-family: Retro;" for="name">NAME (MAX 5)</label>
+                <label style="color: white; font-family: Retro; font-size: 3vh;" for="name">NAME (MAX 5)</label>
 
-                <input type="text" id="player-name" name="name" minlength="1" maxlength="4">
+                <input type="text" id="player-name" name="name" minlength="1" maxlength="5">
             </div>
         </div>
 
@@ -98,21 +112,21 @@
     </div>
 
     <div id="waiting-screen" style="visibility: hidden;">
-        <div class="hint-text">Press the button when you're ready</div>
+        <div class="hint-text" style="margin-top: 3%;">Press the button when you're ready</div>
 
         <div class="center-content">
-            <button id="ready-btn" class="custom-button">READY!</button>
+            <button id="ready-btn" class="ready-button">READY!</button>
             <div id="waiting-text" style="visibility: hidden;" class="hint-text">Waiting for other players...</button>
+            </div>
         </div>
-    </div>
 
-    <div id="controller-container" style="visibility: hidden">
-        <div class="hint-text">Hold anywhere on the grey square to create a virtual joystick </div>
-        <div id="score-text">CURRENT SCORE: 0</div>
-        <div id="center-text"></div>
-        <div id="lives-container"></div>
-        <div style="background-color: rgb(46, 46, 46); width: 100%; height: 100vh;" id="zone_joystick"></div>
-    </div>
+        <div id="controller-container" style="visibility: hidden">
+            <div class="hint-text" style="margin-top: 3%;">Hold anywhere on the grey square to create a virtual joystick </div>
+            <div id="score-text">CURRENT SCORE: 0</div>
+            <div id="center-text"></div>
+            <div id="lives-container"></div>
+            <div style="background-color: rgb(46, 46, 46); width: 100%; height: 100vh;" id="zone_joystick"></div>
+        </div>
 </body>
 <script src="../js/nipplejs.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
