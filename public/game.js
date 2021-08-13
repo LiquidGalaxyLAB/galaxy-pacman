@@ -352,6 +352,8 @@ function draw() {
 		//draw each pacman
 		pacmans.forEach(function (pacman) {
 			const pacmanId = pacman.id
+
+			checkPlayerScreen(pacmanId)
 			if (allowGameStart) pacman.updatePosition(players[pacmanId].direction, screenNumber, nScreens, players[pacmanId])
 			else pacman.updateFixedPosition(screenNumber, nScreens, players[pacmanId])
 			const pacmanPos = pacman.getRowCol()
@@ -485,9 +487,6 @@ function draw() {
 					socket.emit('set-powerup', { duration: POWERPILL_DURATION, value: true, playerId: pacmanId })
 				}
 			}
-			
-			// check screen before updating
-			checkPlayerScreen(pacmanId)
 
 			// emit player position to all screens
 			if (screenNumber == 1 && pacman.shouldUpdate) {
