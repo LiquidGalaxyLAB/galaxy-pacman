@@ -10,7 +10,7 @@ for lg in $LG_FRAMES ; do
         nohup chromium-browser http://localhost:$port/$screenNumber --start-fullscreen --autoplay-policy=no-user-gesture-required </dev/null >/dev/null 2>&1 &
 
 	else
-        ssh -Xnf lg@$lg " export DISPLAY=:0 ; chromium-browser http://lg1:$port/$screenNumber --start-fullscreen --autoplay-policy=no-user-gesture-required </dev/null >/dev/null 2>&1 &" || true
+        ssh -Xnf lg@$lg " export DISPLAY=:0 ; chromium-browser http://lg1:$port/$screenNumber --start-fullscreen </dev/null >/dev/null 2>&1 &" || true
 	fi
 
    sleep 1

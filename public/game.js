@@ -392,7 +392,7 @@ function draw() {
 				const ghostPos = ghost.getRowCol()
 
 				// only collide if position is same and player has moved
-				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && players[pacmanId].hasMoved) {
+				if (ghostPos.row == pacmanPos.row && ghostPos.col == pacmanPos.col && ENABLE_GHOST_COLLISION && players[pacmanId].hasMoved && screenNumber == 1) {
 					if (!pacman.isPoweredUp) {
 						// add score for ghost
 						players[ghostId].score += PACMANEAT_SCORE_VALUE
@@ -405,6 +405,7 @@ function draw() {
 						players[pacmanId].y = players[pacmanId].startY
 						pacman.x = players[pacmanId].startX
 						pacman.y = players[pacmanId].startY
+						players[pacmanId].lives--
 						pacman.shouldUpdate = true
 						players[pacmanId].hasMoved = false
 						socket.emit('pacman-death', players[pacmanId])
