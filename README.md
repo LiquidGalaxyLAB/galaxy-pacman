@@ -7,7 +7,7 @@ The Pac-man game will be a multiplayer and multiscreen remake with a few new fun
 ## Before Running
 - Make sure Node.js version 14 is installed on the master machine, if necessary use the following link for tips on how to install it:
 [How To Install Node.js on Ubuntu 16.04.](https://tecadmin.net/install-latest-nodejs-npm-on-ubuntu/)
-- Make sure pm2 is installed on the master machine, if necessary use the following command to install it afyer Node.js is installed:
+- Make sure pm2 is installed on the master machine, if necessary use the following command to install it after Node.js is installed:
 ```bash
 sudo npm i -g pm2
 ```
