@@ -18,7 +18,12 @@ sudo npm i -g pm2
 4. Make sure Chromium Browser is installed on all machines.
 
 ## Running Project For The Liquid Galaxy
-Firstly, open a new terminal and clone the repository **in the home directory (default directory on terminal)** of the master machine with the command:
+Firstly, open a new terminal and go to the default terminal directory with the command:
+```bash
+cd
+```
+
+Now, clone the repository **in the home directory (default directory on terminal)** of the master machine with the command:
 ```bash
 git clone https://github.com/LiquidGalaxyLAB/galaxy-pacman.git
 ```
