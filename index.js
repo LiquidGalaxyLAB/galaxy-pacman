@@ -56,6 +56,12 @@ io.on('connect', socket => {
     function onNewPlayer(newPl) {
         try {
             console.log('New player connected:', newPl)
+
+            // if no players connected reset hasGameStarted
+            if (Object.keys(players).length == 0) {
+                hasGameStarted = false
+            }
+
             if (!hasGameStarted) {
                 players[socket.id] = newPl;
 
