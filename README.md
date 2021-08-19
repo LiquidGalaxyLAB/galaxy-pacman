@@ -5,20 +5,26 @@
 The Pac-man game will be a multiplayer and multiscreen remake with a few new fun mechanics. The players will spawn as a Pac-Man, each one with a different color, except for one of them that will start as a Ghost. The Pac-Man's goal is to collect as many points by eating food along the map while the Ghost’s goal is to catch all the Pac-Mans, but, once a Ghost catches a Pac-Man, the player will also turn into a ghost and start hunting other Pac-Mans, which makes the game fun and challenging for both teams. The game ends once all the foods are eaten by the Pac-Mans or all the Pac-Mans get caught.
 
 ## Before Running
-1. Make sure **Node.js version 14** is installed on the master machine by running:
+1. Make sure the Liquid Galaxy core is installed, more info about the installation can be found on this [repository](https://github.com/LiquidGalaxyLAB/liquid-galaxy)
+2. Make sure **Node.js version 14** is installed on the master machine by running:
 ```bash
 node -v
 ```
-2. The output should look someting like `v14.17.5`, if this is not the case use the following link for tips on how to install it:
+3. The output should look someting like `v14.17.5`, if this is not the case use the following link for tips on how to install it:
 [How To Install Node.js on Ubuntu 16.04](https://tecadmin.net/install-latest-nodejs-npm-on-ubuntu/)
-3. After Node.js is installed, Install pm2 on master machine. Run command:
+4. After Node.js is installed, Install pm2 on master machine. Run command:
 ```bash
 sudo npm i -g pm2
 ```
-4. Make sure Chromium Browser is installed on all machines.
+5. Make sure Chromium Browser is installed on all machines.
 
 ## Running Project For The Liquid Galaxy
-Firstly, open a new terminal and clone the repository **in the home directory (default directory on terminal)** of the master machine with the command:
+Firstly, open a new terminal and go to the default terminal directory with the command:
+```bash
+cd
+```
+
+Now, clone the repository **in the home directory (default directory on terminal)** of the master machine with the command:
 ```bash
 git clone https://github.com/LiquidGalaxyLAB/galaxy-pacman.git
 ```
