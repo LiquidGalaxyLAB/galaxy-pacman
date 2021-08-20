@@ -2,7 +2,7 @@
 
 # Galaxy Pacman
 
-The Pac-man game will be a multiplayer and multiscreen remake with a few new fun mechanics. The players will spawn as a Pac-Man, each one with a different color, except for one of them that will start as a Ghost. The Pac-Man's goal is to collect as many points by eating food along the map while the Ghost’s goal is to catch all the Pac-Mans, but, once a Ghost catches a Pac-Man, the player will also turn into a ghost and start hunting other Pac-Mans, which makes the game fun and challenging for both teams. The game ends once all the foods are eaten by the Pac-Mans or all the Pac-Mans get caught.
+The Galaxy Pacman game is a multiplayer and multiscreen remake of the classic pacman game with a few new fun mechanics in which players can spawn as either pacmans or ghosts, each one with a different color. The pacmans' goal is to collect as many points as possible by eating food along the map while the ghosts' goal is to catch all the pacman, but, once a pacman loses all their lives, they will also turn into a ghost and start hunting other pacmans, which makes the game very fun and challenging for both teams! The game ends once all the foods are eaten by the pacmans or all the pacmans get caught.
 
 ## Before Running
 1. Make sure the Liquid Galaxy core is installed, more info about the installation can be found on this [repository](https://github.com/LiquidGalaxyLAB/liquid-galaxy)
@@ -72,3 +72,9 @@ If you experience any problems, check the installation logs for any possible err
 
 ## Connecting Players To The Game Locally
 Once the screens are open, you can open the controller on any browser with the url **machineIp**:8128/controller, where **machineIp** is the IPv4 of the machine where the server is running.
+
+## License
+
+This software is under the [MIT License](https://en.wikipedia.org/wiki/MIT_License)
+
+Copyright 2021 [Leonardo Coelho Ruas](https://www.linkedin.com/in/leonardo-ruas-2657a41b4/)
