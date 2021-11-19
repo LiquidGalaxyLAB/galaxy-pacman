@@ -307,6 +307,18 @@ function onAllPlayersReady() {
 }
 socket.on('all-players-ready', onAllPlayersReady)
 
+// Start of LG Connection
+const galaxyPort = 5433
+const ip = 'lg1'
+const lgSocket = io(`http://${ip}:${galaxyPort}`)
+lgSocket.on("reset", () => {
+    const url = window.location.href
+    const num = url.substring(url.length)
+    window.location.href = `http://${ip}:${galaxyPort}/galaxy/basic/screensaver?num=${num}`
+})
+// End of LG Connection
+
+
 // Get canvas element from index.html
 const canvas = document.getElementById('gameCanvas');
 canvas.height = window.innerHeight - TOP_OFFSET

@@ -3,8 +3,8 @@ import express from 'express'
 var app = express();
 import httpImport from 'http'
 var http = httpImport.createServer(app);
-import socketio from 'socket.io'
-var io = socketio(http);
+import { Server } from 'socket.io'
+var io = new Server(http);
 
 import path from 'path';
 const __dirname = path.resolve();
