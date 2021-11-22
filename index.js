@@ -9,7 +9,7 @@ var io = new Server(http);
 import path from 'path';
 const __dirname = path.resolve();
 
-const port = 8128;
+const port = 3000;
 
 // Setup files to be sent on connection
 const filePath = "/public" // Do not add '/' at the end
