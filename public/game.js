@@ -313,7 +313,7 @@ const ip = 'lg1'
 const lgSocket = io(`http://${ip}:${galaxyPort}`)
 lgSocket.on("reset", () => {
     const url = window.location.href
-    const num = url.substring(url.length)
+    const num = url.substring(url.length - 1)
     window.location.href = `http://${ip}:${galaxyPort}/galaxy/basic/screensaver?num=${num}`
 })
 // End of LG Connection
