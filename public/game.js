@@ -41,7 +41,9 @@ let stats = new Stats();
 if (SHOW_STATUS) container.appendChild(stats.dom);
 
 // Variables
-let screenNumber, nScreens, allFoodsEaten = {};
+let url = window.location.href
+let num = url.substring(url.length - 1)
+let screenNumber = num, nScreens, allFoodsEaten = {};
 let currentMap = MASTER_MAP_LAYOUT //default to master map
 var players = {}; // object containing players information. the object key is the id of the players constroller socket
 var centerText = document.getElementById('center-text')
@@ -58,7 +60,6 @@ var socket = io()
  * @param {Object} screen screen object containing info like screen number and total of screens
  */
 function screenSetup(screen) {
-	screenNumber = screen.number;
 	nScreens = screen.nScreens;
 	currentMap = screenNumber == 1 ? MASTER_MAP_LAYOUT : SLAVE_MAP_LAYOUT
 
